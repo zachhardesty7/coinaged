@@ -105,4 +105,4 @@ api.add_resource(Trades, '/trades')
 
 
 if __name__ == '__main__':
-    app.run(port=5002)
+    app.run()
