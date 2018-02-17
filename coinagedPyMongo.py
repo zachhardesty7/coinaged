@@ -9,14 +9,10 @@
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from cursesmenu import CursesMenu, SelectionMenu
-from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem, MenuItem
-from pprint import pprint
 import requests
 from math import log10, floor
 from time import time
 from binance.client import Client
-import os
 import json
 from datetime import datetime
 
