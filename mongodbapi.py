@@ -22,7 +22,7 @@ from datetime import datetime
 
 # configs
 # app.config['MONGO_DBNAME'] = 'coinaged-api'
-MONGO_URL = sos.environ.get('MONGO_URL')
+MONGO_URL = os.environ.get('MONGO_URL')
 if not MONGO_URL:
     MONGO_URL = "mongodb://***REMOVED***:fknc43vtadufaq5ci2dh7qqgps@***REMOVED***:***REMOVED***/***REMOVED***";
 app = Flask(__name__)
