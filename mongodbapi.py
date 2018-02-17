@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 
 # from json import dumps
 # from flask_jsonpify import jsonify
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from bson.json_util import loads
 from bson.json_util import dumps
 # from cursesmenu import CursesMenu, SelectionMenu
@@ -42,17 +42,17 @@ binanceSecret = '***REMOVED***'
 # DB = client.coinaged
 
 # only use active ones in each route
-# histoPricesDB = DB.histoPrices
-# usersDB = DB.users
-# transactionsDB = DB.transactions
-# tradesDB = DB.trades
+# histoPricesDB = mongo.db.histoPrices
+# usersDB = mongo.db.users
+# transactionsDB = mongo.transactions
+# tradesDB = mongo.trades
 
 
 # TODO: write class / function to handle objectid encode / decode
 class Users(Resource):
     def get(self):
         users = []
-        for user in DB.users.find():
+        for user in mongo.db.users.find():
             user['_id'] = str(user['_id'])
             for i in range(0, len(user['transactions'])):
                 user['transactions'][i] = str(user['transactions'][i])
@@ -63,7 +63,7 @@ class Users(Resource):
 class UsersId(Resource):
     def get(self, userId):
         users = []
-        for user in DB.users.find({'_id': ObjectId(userId)}):
+        for user in mongo.db.users.find({'_id': ObjectId(userId)}):
             user['_id'] = str(user['_id'])
             for i in range(0, len(user['transactions'])):
                 user['transactions'][i] = str(user['transactions'][i])
@@ -73,14 +73,14 @@ class UsersId(Resource):
 
 class UsersAccount(Resource):
     def get(self, userId):
-        account = coinagedPyMongo.getUserAccount(DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
+        account = coinagedPyMongo.getUserAccount(mongo.db.users, mongo.db.transactions, mongo.db.trades, mongo.db.histoPrices, userId)
         return jsonify(account)
 
 
 class Transactions(Resource):
     def get(self):
         transactions = []
-        for transaction in DB.transactions.find():
+        for transaction in mongo.db.transactions.find():
             transaction['_id'] = str(transaction['_id'])
             transactions.append(transaction)
         return jsonify(transactions)
@@ -89,7 +89,7 @@ class Transactions(Resource):
 class TransactionsId(Resource):
     def get(self, transactionId):
         transactions = []
-        for transaction in DB.transactions.find({'_id': ObjectId(transactionId)}):
+        for transaction in mongo.db.transactions.find({'_id': ObjectId(transactionId)}):
             transaction['_id'] = str(transaction['_id'])
             transactions.append(transaction)
         return jsonify(transactions)
@@ -98,7 +98,7 @@ class TransactionsId(Resource):
 class Trades(Resource):
     def get(self):
         trades = []
-        for trade in DB.trades.find():
+        for trade in mongo.db.trades.find():
             trade['_id'] = str(trade['_id'])
             trades.append(trade)
         return jsonify(trades)
