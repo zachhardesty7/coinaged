@@ -21,6 +21,7 @@ import os
 from datetime import datetime
 
 # configs
+# app.config['MONGO_DBNAME'] = 'coinaged-api'
 MONGO_URL = os.environ.get('MONGO_URL')
 if not MONGO_URL:
     MONGO_URL = "mongodb://localhost:27017/rest";
@@ -28,7 +29,7 @@ app = Flask(__name__)
 mongo = PyMongo(app)
 app.config['MONGO_URI'] = MONGO_URL
 api = Api(app)
-api.representations = DEFAULT_REPRESENTATIONS
+# api.representations = DEFAULT_REPRESENTATIONS
 
 # future shift to mongo engine
 import coinagedPyMongo
@@ -37,8 +38,8 @@ SYMS = ['ADA', 'ARK', 'BCC', 'BNB', 'BTC', 'DASH', 'EOS', 'ETH', 'ICX', 'IOTA', 
 binanceApiKey = '***REMOVED***'
 binanceSecret = '***REMOVED***'
 # BINANCE_CLIENT = Client(binanceApiKey, binanceSecret)
-client = MongoClient()
-DB = client.coinaged
+# client = MongoClient()
+# DB = client.coinaged
 
 # only use active ones in each route
 # histoPricesDB = DB.histoPrices
