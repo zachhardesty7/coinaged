@@ -17,6 +17,7 @@ from math import log10, floor
 from time import time
 from binance.client import Client
 import json
+import os
 from datetime import datetime
 
 # configs
