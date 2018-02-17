@@ -1,8 +1,7 @@
-# future shift to mongo engine
-import coinagedPyMongo
 
 from flask import Flask, request
 from flask_restful import Resource, Api
+from flask.ext.pymongo import PyMongo
 from bson.objectid import ObjectId
 
 # from json import dumps
@@ -12,19 +11,27 @@ from bson.json_util import loads
 from bson.json_util import dumps
 # from cursesmenu import CursesMenu, SelectionMenu
 # from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem, MenuItem
-# from pprint import pprint 
+# from pprint import pprint
 import requests
 from math import log10, floor
 from time import time
 from binance.client import Client
-import os
 import json
 from datetime import datetime
 
 # configs
-DEBUG = False
+MONGO_URL = os.environ.get('MONGO_URL')
+if not MONGO_URL:
+    MONGO_URL = "mongodb://localhost:27017/rest";
 app = Flask(__name__)
+mongo = PyMongo(app)
+app.config['MONGO_URI'] = MONGO_URL
 api = Api(app)
+api.representations = DEFAULT_REPRESENTATIONS
+
+# future shift to mongo engine
+import coinagedPyMongo
+DEBUG = False
 SYMS = ['ADA', 'ARK', 'BCC', 'BNB', 'BTC', 'DASH', 'EOS', 'ETH', 'ICX', 'IOTA', 'LSK', 'LTC', 'NEO', 'OMG', 'TRX', 'VEN', 'WTC', 'XLM', 'XMR', 'XRP', 'XVG']
 binanceApiKey = '***REMOVED***'
 binanceSecret = '***REMOVED***'
