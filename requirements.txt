@@ -12,6 +12,7 @@ cryptography==2.1.4
 dateparser==0.7.0
 flake8==3.5.0
 Flask==0.12.2
+Flask-PyMongo==0.5.1
 Flask-RESTful==0.3.6
 gunicorn==19.7.1
 hyperlink==17.3.1
