@@ -5,21 +5,21 @@ from flask import Flask, request
 from flask_restful import Resource, Api
 from bson.objectid import ObjectId
 
-from json import dumps
-from flask_jsonpify import jsonify
-from pymongo import MongoClient
-from bson.json_util import loads
-from bson.json_util import dumps
-from cursesmenu import CursesMenu, SelectionMenu
-from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem, MenuItem
-from pprint import pprint
-import requests
-from math import log10, floor
-from time import time
-from binance.client import Client
-import os
-import json
-from datetime import datetime
+# from json import dumps
+# from flask_jsonpify import jsonify
+# from pymongo import MongoClient
+# from bson.json_util import loads
+# from bson.json_util import dumps
+# from cursesmenu import CursesMenu, SelectionMenu
+# from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem, MenuItem
+# from pprint import pprint
+# import requests
+# from math import log10, floor
+# from time import time
+# from binance.client import Client
+# import os
+# import json
+# from datetime import datetime
 
 # configs
 DEBUG = False
