@@ -107,8 +107,9 @@ tradesStruct = [
 
 def main():
     # initialize and load databases
-    client = MongoClient()
-    db = client.coinaged
+    URI = '***REMOVED***'
+    client = MongoClient(URI)
+    db = client.database
     histoPricesDB = db.histoPrices
     usersDB = db.users
     transactionsDB = db.transactions

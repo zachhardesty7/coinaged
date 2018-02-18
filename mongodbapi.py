@@ -1,38 +1,42 @@
 # future shift to mongo engine
 import coinagedPyMongo
 
-from flask import Flask, request
+from flask import Flask, jsonify
 from flask_restful import Resource, Api
 from bson.objectid import ObjectId
 
 # from json import dumps
-# from flask_jsonpify import jsonify
+# from flask_jsonify import jsonify
 from pymongo import MongoClient
-from bson.json_util import loads
-from bson.json_util import dumps
-# from cursesmenu import CursesMenu, SelectionMenu
-# from cursesmenu.items import FunctionItem, SubmenuItem, CommandItem, MenuItem
-# from pprint import pprint
-import requests
-from math import log10, floor
-from time import time
-from binance.client import Client
-import json
-from datetime import datetime
+# import requests
+# from math import log10, floor
+# from time import time
+# from binance.client import Client
+# import json
+# from datetime import datetime
 
 # configs
 app = Flask(__name__)
 api = Api(app)
 
 DEBUG = False
-SYMS = ['ADA', 'ARK', 'BCC', 'BNB', 'BTC', 'DASH', 'EOS', 'ETH', 'ICX', 'IOTA', 'LSK', 'LTC', 'NEO', 'OMG', 'TRX', 'VEN', 'WTC', 'XLM', 'XMR', 'XRP', 'XVG']
-binanceApiKey = '***REMOVED***'
-binanceSecret = '***REMOVED***'
+# SYMS = ['ADA', 'ARK', 'BCC', 'BNB', 'BTC', 'DASH', 'EOS', 'ETH', 'ICX', 'IOTA', 'LSK', 'LTC', 'NEO', 'OMG', 'TRX', 'VEN', 'WTC', 'XLM', 'XMR', 'XRP', 'XVG']
+# binanceApiKey = '***REMOVED***'
+# binanceSecret = '***REMOVED***'
 # BINANCE_CLIENT = Client(binanceApiKey, binanceSecret)
-URI = 'mongodb://***REMOVED***:fknc43vtadufaq5ci2dh7qqgps@***REMOVED***:***REMOVED***/***REMOVED***
-'
-client = MongoClient(URI)
-DB = client.database
+URI = '***REMOVED***'
+DB_NAME = '***REMOVED***'
+DB_HOST = '***REMOVED***'
+DB_PORT = ***REMOVED***
+DB_USER = '***REMOVED***'
+DB_PASS = '***REMOVED***'
+
+client = MongoClient(DB_HOST, DB_PORT)
+DB = client[DB_NAME]
+DB.authenticate(DB_USER, DB_PASS)
+
+# client = MongoClient(URI)
+# DB = client.database
 
 # only use active ones in each route
 # histoPricesDB = DB.histoPrices
