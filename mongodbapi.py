@@ -65,7 +65,7 @@ class UsersId(Resource):
         return jsonify(users)
 
 
-class UsersAccount(Resource):
+class UsersPortfolio(Resource):
     def get(self, userId):
         account = coinagedPyMongo.getUserAccount(DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
         return jsonify(account)
@@ -103,7 +103,7 @@ class Portfolio(Resource):
 
 api.add_resource(Users, '/users')
 api.add_resource(UsersId, '/users/<userId>')
-api.add_resource(UsersAccount, '/users/<userId>/account')
+api.add_resource(UsersPortfolio, '/users/<userId>/portfolio')
 api.add_resource(Transactions, '/transactions')
 api.add_resource(TransactionsId, '/transactions/<transactionId>')
 api.add_resource(Trades, '/trades')
