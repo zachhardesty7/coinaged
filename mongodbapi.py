@@ -96,8 +96,8 @@ class Trades(Resource):
 
 
 class Portfolio(Resource):
-    def get(self, userId):
-        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
+    def get(self):
+        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades)
         return jsonify(portfolio)
 
 
