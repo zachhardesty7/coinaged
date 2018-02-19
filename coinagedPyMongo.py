@@ -7,14 +7,12 @@
 # TODO: mongoengine full swap
 # TODO: query database instead of grabbing all data and processing in python
 
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from bson.objectid import ObjectId
 import requests
-from math import log10, floor
 from time import time
 from binance.client import Client
 import json
-from datetime import datetime
 
 # configs
 MUTED = False
@@ -105,95 +103,16 @@ tradesStruct = [
 ]
 
 
-def main():
-    # initialize and load databases
-    URI = '***REMOVED***'
-    client = MongoClient(URI)
-    db = client.database
-    histoPricesDB = db.histoPrices
-    usersDB = db.users
-    transactionsDB = db.transactions
-    tradesDB = db.trades
-
-    # commented for testing
-    #
-    # # main menu
-    # menu = CursesMenu('coinaged.io database manager', 'choose category to interact with')
-    #
-    # # view portfolio
-    # viewPortfolioItem = FunctionItem('view portfolio', getPortfolio, [usersDB, transactionsDB])
-    #
-    # # user menu
-    # userMenu = CursesMenu('coinaged.io database manager', 'users:')
-    # viewUserItem = FunctionItem('view', getUserAccount, [usersDB])
-    # addUserItem = FunctionItem('add', addUser, [usersDB])
-    # removeUserItem = FunctionItem('remove', removeUser, [usersDB])
-    # editUserItem = FunctionItem('edit', getUser, [usersDB, transactionsDB])
-    #
-    # userMenu.append_item(viewUserItem)
-    # userMenu.append_item(addUserItem)
-    # userMenu.append_item(removeUserItem)
-    # userMenu.append_item(editUserItem)
-    #
-    # userMenuItem = SubmenuItem('users', userMenu, menu)
-    #
-    # # transactions menu
-    # transactionsMenu = CursesMenu('coinaged.io database manager', 'transactions:')
-    # addTransactionItem = FunctionItem('add', addTransaction, [usersDB, transactionsDB])
-    # removeTransactionItem = FunctionItem('remove', addTransaction, [usersDB, transactionsDB])
-    # editTransactionItem = FunctionItem('edit', editTransaction, [usersDB, transactionsDB])
-    # cleanTransactionItem = FunctionItem('clean', cleanTransactionsDB, [usersDB, transactionsDB])
-    #
-    # transactionsMenu.append_item(addTransactionItem)
-    # transactionsMenu.append_item(removeTransactionItem)
-    # transactionsMenu.append_item(editTransactionItem)
-    # transactionsMenu.append_item(cleanTransactionItem)
-    #
-    # transactionsMenuItem = SubmenuItem('transactions', transactionsMenu, menu)
-    #
-    # # misc menu
-    # miscMenu = CursesMenu('coinaged.io database manager', 'misc:')
-    # refreshHistoPricesItem = FunctionItem('update historical prices', updateHourlyPrices, [histoPricesDB])
-    #
-    # miscMenu.append_item(refreshHistoPricesItem)
-    #
-    # miscMenuItem = SubmenuItem('misc', miscMenu, menu)
-    #
-    # # add submenus to main menu
-    # menu.append_item(viewPortfolioItem)
-    # menu.append_item(userMenuItem)
-    # menu.append_item(transactionsMenuItem)
-    # menu.append_item(miscMenuItem)
-    #
-    # menu.show()
-
-    # quick testing
-    # getPortfolio(usersDB, transactionsDB, tradesDB)
-    getUserAccount(usersDB, transactionsDB, tradesDB, histoPricesDB)
-
-    # pprint(BINANCE_CLIENT.get_all_orders(symbol='NANOBTC', limit=500))
-
-    # editTransaction(usersDB, transactionsDB)
-    # getUser(usersDB, transactionsDB)
-    # deleteDocs(tradesDB)
-    # updateTradeDB(tradesDB, usersDB, getTickers())
-    # viewTrades(tradesDB)
-
-
 #######################
 # portfolio functions #
 #######################
 
+
 def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
-    # initial deposit = 1234567890
-    # first depost in new acct = 1234567890000
-    # timestamp = 1234567890
-    # timestamp = 1234567890
-    timestamp = 1234567890
     tickers = getTickers()
     tickerPrices = getTickerPrices(tickers, timestamp)
     portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
-    # updateTradeDB(tradesDB, transactionsDB, tickers)
+    updateTradeDB(tradesDB, transactionsDB, tickers)
     portfolioTrades = getPortfolioTrades(tradesDB)
     portfolioBalance = getPortfolioBalance()
     portfolioTransactions = getPortfolioTransactions(transactionsDB)
@@ -206,12 +125,15 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     curNav = calculateNav(transactionsDB, portfolioValueAggregate, timestamp)
 
-    print('used time: ' + str(timestamp) + ' (' + str(datetime.utcfromtimestamp(timestamp)) + ')')
-    print('portfolio principle: $' + str(int(portfolioPrinciple)))
-    print('portfolio value: $' + str(int(portfolioValueAggregate)))
-    if(int(portfolioPrinciple) != 0):
-        print('overall performance: ' + str(int((portfolioValueAggregate - portfolioPrinciple) / portfolioPrinciple * 100)) + '%')
-    print('portfolio nav: ' + str(curNav))
+    output = {
+        'time': timestamp,
+        'nav': curNav,
+        'principle': portfolioPrinciple,
+        'value': portfolioValueAggregate,
+        'performance': int((portfolioValueAggregate - portfolioPrinciple) / portfolioPrinciple * 100) / 100
+    }
+
+    return output
 
 
 def getPortfolioPrinciple(transactionsDB, timestamp=int(time())):
@@ -349,19 +271,14 @@ def getPortfolioHistoBalance(portfolioBalance, portfolioTrades, portfolioTransac
 
     # TODO: IMPLEMENT PROPER BACK TRACKING
     # eliminate transactions after timestamp using stored transactions - proper method
-    # print('\ndatabase transactions: \n')
     # for transaction in portfolioTransactions:
     #     if(transaction['timestamp'] > timestamp):
-    #         pprint(transaction)
     #         if(transaction['action'] == 'deposit'):
     #             for ticker, val in transaction['dist'].items():
     #                 portfolioBalance[ticker] -= val
-    #             # pprint(portfolioBalance)
     #         elif(transaction['action'] == 'withdrawal'):
     #             for ticker, val in transaction['dist'].items():
     #                 portfolioBalance[ticker] += val
-    #             # pprint(portfolioBalance)
-    #         # pprint(portfolioBalance)
 
     # temp back tracking
     if(timestamp <= 1516596360):
@@ -402,114 +319,10 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 # user menu functions #
 #######################
 
-def getUser(usersDB, transactionsDB):
-    # refreshOutput()
-    print('user list:')
-    for user in usersDB.find():
-        print(user['firstName'] + ' ' + user['lastName'] + ' | ' + user['email'])
-
-    firstName = input('\nenter user first name: ')
-    lastName = input('enter user last name: ')
-
-    selectedUser = usersDB.find_one({'firstName': firstName, 'lastName': lastName})
-
-    # refreshOutput()
-    viewUser(selectedUser, transactionsDB)
-
-    return selectedUser
-
-
-def viewUser(user, transactionsDB):
-    print('user id: ' + str(user['_id']))
-    print('user first name: ' + user['firstName'])
-    print('user last name: ' + user['lastName'])
-    print('user email: ' + user['email'])
-    print('user phone number: ' + user['phone'])
-    print('user transactions: ')
-    for transactionId in user['transactions']:
-        transaction = getTransaction(transactionsDB, transactionId)
-        viewTransaction(transaction)
-        print()
-
-
-def addUser(users):
-    firstName = input('first name: ').lower()
-    lastName = input('last name: ').lower()
-    email = input('email: ').lower()
-    phone = input('phone number: ').lower()
-
-    user = {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'phone': phone,
-        'transactions': []
-    }
-
-    users.insert_one(user)
-
-    # refreshOutput()
-    print('user created.\n')
-
-
-def removeUser(users):
-    firstName = input('\nenter user first name: ').lower()
-    lastName = input('enter user last name: ').lower()
-
-    selectedUser = users.find_one({'firstName': firstName, 'lastName': lastName})
-
-    print('\ndeleted user: ')
-    pprint(selectedUser)
-
-    deleteDocs(users, {'firstName': firstName, 'lastName': lastName})
-
-
-# TODO: testing
-def editUser(usersDB, transactionsDB):
-    selectedUser = getUser(usersDB, transactionsDB)
-
-    print('\nenter new fields:')
-    firstName = input('\nenter user first name: ')
-    lastName = input('enter user last name: ')
-
-    selectedUser = usersDB.find_one({'firstName': firstName, 'lastName': lastName})
-
-    print('\nselected user:')
-    pprint(selectedUser)
-
-    firstName = input('first name: ').lower()
-    lastName = input('last name: ').lower()
-    email = input('email: ').lower()
-    phone = input('phone number: ').lower()
-
-    usersDB.update_one(selectedUser, {'$set': {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'phone': phone
-    }})
-
-    # refreshOutput()
-    print('user updated.\n')
-
-
-# updated portfolioHistoBalance to now consider the second ticker
 def getUserAccount(usersDB, transactionsDB, tradesDB, histoPricesDB, userId, timestamp=int(time())):
-    tickers = getTickers()
-    tickerPrices = getTickerPrices(tickers, timestamp)
-    portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
-    # updateTradeDB(tradesDB, transactionsDB, tickers)
-    portfolioTrades = getPortfolioTrades(tradesDB)
-    portfolioBalance = getPortfolioBalance()
-    portfolioTransactions = getPortfolioTransactions(transactionsDB)
+    portfolio = getPortfolio(usersDB, transactionsDB, tradesDB, timestamp)
 
-    # add or subtract past transactions to get historical balance
-    portfolioHistoBalance = getPortfolioHistoBalance(portfolioBalance, portfolioTrades, portfolioTransactions, timestamp)
-
-    portfolioValue = getPortfolioValue(portfolioHistoBalance, tickerPrices)
-    portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
-
-    curNav = calculateNav(transactionsDB, portfolioValueAggregate, timestamp)
+    portfolioNav = portfolio['nav']
 
     users = []
     for user in usersDB.find({'_id': ObjectId(userId)}):
@@ -517,7 +330,7 @@ def getUserAccount(usersDB, transactionsDB, tradesDB, histoPricesDB, userId, tim
     user = users[0]
 
     userPrinciple = getUserPrinciple(user, transactionsDB, timestamp)
-    userValue = getUserValue(user, transactionsDB, userPrinciple, curNav, timestamp)
+    userValue = getUserValue(user, transactionsDB, userPrinciple, portfolioNav, timestamp)
 
     output = {
         'time': timestamp,
@@ -548,14 +361,6 @@ def getUserPrinciple(selectedUser, transactionsDB, timestamp=int(time())):
 
 
 def getUserValue(selectedUser, transactionsDB, userPrinciple, curNav, timestamp=int(time())):
-    # test data
-    # $100 @ 1
-    # $100 @ 2
-    # $100 @ 4
-    # cur nav: 8
-    #
-    # 800 + 400 + 200 = 1400
-
     userValue = 0
     transactions = []
     for transactionId in selectedUser['transactions']:
@@ -572,7 +377,11 @@ def getUserValue(selectedUser, transactionsDB, userPrinciple, curNav, timestamp=
 
 
 def getTransaction(transactionsDB, transactionId):
-    return transactionsDB.find_one({'_id': transactionId})
+    transactions = []
+    for transaction in transactionsDB.find({'_id': ObjectId(transactionId)}):
+        transaction['_id'] = str(transaction['_id'])
+        transactions.append(transaction)
+    return transactions
 
 
 # cleans up excess of properties unneeded for usecase
@@ -595,14 +404,11 @@ def sanitizeTrades(binanceTrades):
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
-    print('loading newest trades into database...')
     binanceTrades = []
 
     # cycle tickers to collect binance trades
     for ticker in tickers:
         if(ticker != 'BTC'):
-            # if(ticker == 'NANO'):
-            #     ticker = 'XRB'
             ticker = ticker + 'BTC'
             trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
             for trade in trades:
@@ -632,87 +438,5 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
             tradesDB.insert_one(JSONtrade)
 
 
-########################
-# other misc functions #
-########################
-
-def refreshOutput():
-    if not MUTED:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print('|--------------------------------|')
-        print('|  coinaged.io database manager  |')
-        print('|--------------------------------|')
-        print()
-
-
-def roundToN(x, n):
-    return round(x, -int(floor(log10(x))) + (n - 1))
-
-
 def deleteDocs(db, match={}):
-    result = db.delete_many(match)
-    print('deleted ' + str(result.deleted_count) + ' documents\n')
-
-
-# find the average coin value from prev 24hr
-def updateHourlyPrices(tickers, histoPrices):
-    print('refreshing historical prices...')
-
-    docs = []
-    curTime = int(time())
-    url = 'https://min-api.cryptocompare.com/data/histohour'
-
-    # form struct (temp)
-    params = {
-        'fsym': 'ETH',
-        'tsym': 'USD',
-        'toTs': curTime,
-        'limit': 24  # 2000 hours max
-    }
-    r = requests.get(url=url, params=params)
-    for hour in r.json()['Data']:
-        docs.append({
-            'timestamp': str(hour['time']),
-            'data': {}
-        })
-        # STRUCT[str(TS)] = {}
-
-    for ticker in tickers:
-        params = {
-            'fsym': ticker,
-            'tsym': 'USD',
-            'toTs': curTime,
-            'limit': 24  # 2000 hours max
-        }
-        r = requests.get(url=url, params=params)
-        # for hour in r.json()['Data']:
-        data = r.json()['Data']
-        for i in range(0, len(data)):
-            OHLC = (data[i]['open'] +
-                    data[i]['high'] +
-                    data[i]['low'] +
-                    data[i]['close']) / 4
-            try:
-                docs[i]['data'][ticker] = {
-                    'price': roundToN(OHLC, 5)
-                }
-            except:
-                pass
-
-    deleteDocs(histoPrices)
-    histoPrices.insert_many(docs)
-
-    return docs
-
-
-def getPortfolioValueBTC(portfolioBalance, prices, time=int(time())):
-    portfolioValueBTC = 0
-    for i in range(0, len(portfolioBalance)):
-        if (portfolioBalance[i]['asset'] == 'BTC'):
-            portfolioValueBTC += float(portfolioBalance[i]['free'])
-        else:
-            portfolioValueBTC += float(portfolioBalance[i]['free']) * float(prices['prices'][portfolioBalance[i]['asset']])
-
-    conversionRate = getBTCUSDRate()
-
-    return portfolioValueBTC
+    db.delete_many(match)

@@ -35,9 +35,6 @@ client = MongoClient(DB_HOST, DB_PORT)
 DB = client[DB_NAME]
 DB.authenticate(DB_USER, DB_PASS)
 
-# client = MongoClient(URI)
-# DB = client.database
-
 # only use active ones in each route
 # histoPricesDB = DB.histoPrices
 # usersDB = DB.users
@@ -85,11 +82,8 @@ class Transactions(Resource):
 
 class TransactionsId(Resource):
     def get(self, transactionId):
-        transactions = []
-        for transaction in DB.transactions.find({'_id': ObjectId(transactionId)}):
-            transaction['_id'] = str(transaction['_id'])
-            transactions.append(transaction)
-        return jsonify(transactions)
+        transaction = coinagedPyMongo.getTransaction(DB.transactions, transactionId)
+        return jsonify(transaction)
 
 
 class Trades(Resource):
@@ -101,13 +95,19 @@ class Trades(Resource):
         return jsonify(trades)
 
 
+class Portfolio(Resource):
+    def get(self, userId):
+        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
+        return jsonify(portfolio)
+
+
 api.add_resource(Users, '/users')
 api.add_resource(UsersId, '/users/<userId>')
 api.add_resource(UsersAccount, '/users/<userId>/account')
 api.add_resource(Transactions, '/transactions')
 api.add_resource(TransactionsId, '/transactions/<transactionId>')
 api.add_resource(Trades, '/trades')
-# api.add_resource(, '/portfolio')
+api.add_resource(Portfolio, '/portfolio')
 
 
 if __name__ == '__main__':
