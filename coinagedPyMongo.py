@@ -1,9 +1,6 @@
-# TODO: python api
-# TODO: remove manual user inputs
 # TODO: function conversion to final product - research debug mode style
 # TODO: clean get user val and get portfolioValue
 # TODO: implement proper backtracking for calculating value
-# TODO: implement cursesmenu
 # TODO: mongoengine full swap
 # TODO: query database instead of grabbing all data and processing in python
 

@@ -1,20 +1,12 @@
+# TODO: speed up nav calculation using cached value of most recently called nav and current nav
 # future shift to mongo engine
 import coinagedPyMongo
 
 from flask import Flask, jsonify
 from flask_restful import Resource, Api
 from bson.objectid import ObjectId
-import json
-
-# from json import dumps
-# from flask_jsonify import jsonify
 from pymongo import MongoClient
-# import requests
-# from math import log10, floor
-# from time import time
-# from binance.client import Client
-# import json
-# from datetime import datetime
+import json
 
 # configs
 APP = Flask(__name__)
