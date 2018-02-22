@@ -16,63 +16,63 @@
 	"usersStruct": {
 		"firstName": "zach",
 		"lastName": "hardesty",
-		"email": "name@example.com",
-		"phone": "18000000000",
-		"transactions": ["ObjectId('***REMOVED***')", "ObjectId('***REMOVED***')"]
+		"email": "hello@zachhardesty.com",
+		"phone": "2146763273",
+		"transactions": ["ObjectId('5a622c0d3b882f4348d28f45')", "ObjectId('5a622c0d3b882f4348d28f45')"]
 	},
 
 	"transactionsStruct": [{
-			"_id": "ObjectId('***REMOVED***')",
+			"_id": "ObjectId('5a622c0d3b882f4348d28f45')",
 			"action": "deposit",
 			"amount": 500,
 			"dist": {
-				"BTC": 0.0123456789,
-				"ETH": 0.0123456789,
-				"BCH": 0.0123456789,
-				"LTC": 0.0123456789
+				"BTC": 0.01323821359,
+				"ETH": 0.27557003398,
+				"BCH": 0.01781784951,
+				"LTC": 0.16326809708
 			},
 			"nav": 1,
 			"portfolio": "moderate",
-			"timestamp": 1234567890
+			"timestamp": 1482364800
 		},
 		{
-			"_id": "ObjectId('***REMOVED***')",
+			"_id": "ObjectId('5a622c663b882f449481abec')",
 			"action": "deposit",
 			"amount": 500,
 			"dist": {
-				"BTC": 0.0123456789,
-				"ETH": 0.0123456789,
-				"BCH": 0.0123456789,
-				"LTC": 0.0123456789
+				"BTC": 0.01323821359,
+				"ETH": 0.27557003398,
+				"BCH": 0.01781784951,
+				"LTC": 0.16326809708
 			},
 			"nav": 1,
 			"portfolio": "moderate",
-			"timestamp": 1234567890
+			"timestamp": 1482364800
 		},
 		{
-			"_id": "ObjectId('***REMOVED***')",
+			"_id": "ObjectId('5a622cda3b882f44ad860084')",
 			"action": "deposit",
 			"amount": 30,
 			"dist": {
-				"BTC": 0.0123456789,
-				"ETH": 0.0123456789,
-				"BCH": 0.0123456789,
-				"LTC": 0.0123456789
+				"BTC": 0.00079429281,
+				"ETH": 0.01653420203,
+				"BCH": 0.00106907097,
+				"LTC": 0.00979608582
 			},
 			"nav": 1,
 			"portfolio": "moderate",
-			"timestamp": 1234567890
+			"timestamp": 1482364800
 		}
 	],
 
 	"tradesStruct": [{
 		"executedQty": 900,
-		"orderId": 1234,
+		"orderId": 5842,
 		"origQty": 900,
 		"side": "BUY",
 		"status": "FILLED",
 		"symbol": "IOSTETH",
-		"time": 1234567890,
+		"time": 1516774788227,
 		"type": "MARKET"
 	}]
 }
