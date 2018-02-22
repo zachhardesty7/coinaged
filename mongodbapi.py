@@ -4,6 +4,7 @@ import coinagedPyMongo
 from flask import Flask, jsonify
 from flask_restful import Resource, Api
 from bson.objectid import ObjectId
+import json
 
 # from json import dumps
 # from flask_jsonify import jsonify
@@ -16,23 +17,20 @@ from pymongo import MongoClient
 # from datetime import datetime
 
 # configs
-app = Flask(__name__)
-api = Api(app)
+APP = Flask(__name__)
+API = Api(APP)
 
 DEBUG = False
-# SYMS = ['ADA', 'ARK', 'BCC', 'BNB', 'BTC', 'DASH', 'EOS', 'ETH', 'ICX', 'IOTA', 'LSK', 'LTC', 'NEO', 'OMG', 'TRX', 'VEN', 'WTC', 'XLM', 'XMR', 'XRP', 'XVG']
-# binanceApiKey = '***REMOVED***'
-# binanceSecret = '***REMOVED***'
-# BINANCE_CLIENT = Client(binanceApiKey, binanceSecret)
-URI = '***REMOVED***'
-DB_NAME = '***REMOVED***'
-DB_HOST = '***REMOVED***'
-DB_PORT = ***REMOVED***
-DB_USER = '***REMOVED***'
-DB_PASS = '***REMOVED***'
+SECRET = json.load(fp='secret.json')
+DB_URI = SECRET['database']['uri']
+DB_NAME = SECRET['database']['name']
+DB_HOST = SECRET['database']['host']
+DB_PORT = SECRET['database']['port']
+DB_USER = SECRET['database']['user']
+DB_PASS = SECRET['database']['pass']
 
-client = MongoClient(DB_HOST, DB_PORT)
-DB = client[DB_NAME]
+CLIENT = MongoClient(DB_HOST, DB_PORT)
+DB = CLIENT[DB_NAME]
 DB.authenticate(DB_USER, DB_PASS)
 
 # only use active ones in each route
@@ -101,14 +99,14 @@ class Portfolio(Resource):
         return jsonify(portfolio)
 
 
-api.add_resource(Users, '/users')
-api.add_resource(UsersId, '/users/<userId>')
-api.add_resource(UsersPortfolio, '/users/<userId>/portfolio')
-api.add_resource(Transactions, '/transactions')
-api.add_resource(TransactionsId, '/transactions/<transactionId>')
-api.add_resource(Trades, '/trades')
-api.add_resource(Portfolio, '/portfolio')
+API.add_resource(Users, '/users')
+API.add_resource(UsersId, '/users/<userId>')
+API.add_resource(UsersPortfolio, '/users/<userId>/portfolio')
+API.add_resource(Transactions, '/transactions')
+API.add_resource(TransactionsId, '/transactions/<transactionId>')
+API.add_resource(Trades, '/trades')
+API.add_resource(Portfolio, '/portfolio')
 
 
 if __name__ == '__main__':
-    app.run()
+    APP.run()

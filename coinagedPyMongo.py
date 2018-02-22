@@ -15,92 +15,9 @@ from binance.client import Client
 import json
 
 # configs
-MUTED = False
-SYMS = ['ADA', 'ARK', 'BCC', 'BNB', 'BTC', 'DASH', 'EOS', 'ETH', 'ICX', 'IOTA', 'LSK', 'LTC', 'NEO', 'OMG', 'TRX', 'VEN', 'WTC', 'XLM', 'XMR', 'XRP', 'XVG']
-binanceApiKey = '***REMOVED***'
-binanceSecret = '***REMOVED***'
-BINANCE_CLIENT = Client(binanceApiKey, binanceSecret)
-
-# database struct reference
-histoPricesStruct1 = {  # currently unused
-    'timestamp': '1514760000',
-    'data': {
-        'BTC': {
-            'value': 12345,
-            'category': 'primary'
-        },
-        'ETH': {
-            'value': 12345,
-            'category': 'secondary'
-        }
-    }
-}
-
-usersStruct = {
-    'firstName': 'zach',
-    'lastName': 'hardesty',
-    'email': 'name@example.com',
-    'phone': '18000000000',
-    'transactions': ['ObjectId("***REMOVED***")', 'ObjectId("***REMOVED***")']  # transaction IDs
-}
-
-transactionsStruct = [
-    {
-        "_id": 'ObjectId("***REMOVED***")',
-        "action": "deposit",
-        "amount": 500,
-        "dist": {
-            "BTC": 0.0123456789,
-            "ETH": 0.0123456789,
-            "BCH": 0.0123456789,
-            "LTC": 0.0123456789
-        },
-        "nav": 1,
-        "portfolio": "moderate",
-        "timestamp": 1234567890
-    },
-    {
-        "_id": 'ObjectId("***REMOVED***")',
-        "action": "deposit",
-        "amount": 500,
-        "dist": {
-            "BTC": 0.0123456789,
-            "ETH": 0.0123456789,
-            "BCH": 0.0123456789,
-            "LTC": 0.0123456789
-        },
-        "nav": 1,
-        "portfolio": "moderate",
-        "timestamp": 1234567890
-    },
-    {
-        "_id": 'ObjectId("***REMOVED***")',
-        "action": "deposit",
-        "amount": 30,
-        "dist": {
-            "BTC": 0.0123456789,
-            "ETH": 0.0123456789,
-            "BCH": 0.0123456789,
-            "LTC": 0.0123456789
-        },
-        "nav": 1,
-        "portfolio": "moderate",
-        "timestamp": 1234567890
-    }
-]
-
-tradesStruct = [
-    {
-        'executedQty': '900.00000000',
-        'orderId': 1234,
-        'origQty': '900.00000000',
-        'side': 'BUY',
-        'status': 'FILLED',
-        'symbol': 'IOSTETH',
-        'time': 1234567890,
-        'type': 'MARKET'
-    }
-]
+DEBUG = False
+SECRET = json.load(fp='secret.json')
+BINANCE_CLIENT = Client(SECRET['binance']['binanceApiKey'], SECRET['binance']['binanceSecret'])
 
 
 #######################

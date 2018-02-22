@@ -1,0 +1,78 @@
+{
+	"histoPricesStruct": {
+		"timestamp": 1514760000,
+		"data": {
+			"BTC": {
+				"value": 12345,
+				"category": "primary"
+			},
+			"ETH": {
+				"value": 12345,
+				"category": "secondary"
+			}
+		}
+	},
+
+	"usersStruct": {
+		"firstName": "zach",
+		"lastName": "hardesty",
+		"email": "name@example.com",
+		"phone": "18000000000",
+		"transactions": ["ObjectId('***REMOVED***')", "ObjectId('***REMOVED***')"]
+	},
+
+	"transactionsStruct": [{
+			"_id": "ObjectId('***REMOVED***')",
+			"action": "deposit",
+			"amount": 500,
+			"dist": {
+				"BTC": 0.0123456789,
+				"ETH": 0.0123456789,
+				"BCH": 0.0123456789,
+				"LTC": 0.0123456789
+			},
+			"nav": 1,
+			"portfolio": "moderate",
+			"timestamp": 1234567890
+		},
+		{
+			"_id": "ObjectId('***REMOVED***')",
+			"action": "deposit",
+			"amount": 500,
+			"dist": {
+				"BTC": 0.0123456789,
+				"ETH": 0.0123456789,
+				"BCH": 0.0123456789,
+				"LTC": 0.0123456789
+			},
+			"nav": 1,
+			"portfolio": "moderate",
+			"timestamp": 1234567890
+		},
+		{
+			"_id": "ObjectId('***REMOVED***')",
+			"action": "deposit",
+			"amount": 30,
+			"dist": {
+				"BTC": 0.0123456789,
+				"ETH": 0.0123456789,
+				"BCH": 0.0123456789,
+				"LTC": 0.0123456789
+			},
+			"nav": 1,
+			"portfolio": "moderate",
+			"timestamp": 1234567890
+		}
+	],
+
+	"tradesStruct": [{
+		"executedQty": 900,
+		"orderId": 1234,
+		"origQty": 900,
+		"side": "BUY",
+		"status": "FILLED",
+		"symbol": "IOSTETH",
+		"time": 1234567890,
+		"type": "MARKET"
+	}]
+}
