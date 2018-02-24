@@ -13,16 +13,16 @@ APP = Flask(__name__)
 API = Api(APP)
 
 DEBUG = False
-DB_URI = os.environ['DB_URI']
-DB_NAME = os.environ['DB_NAME']
-DB_HOST = os.environ['DB_HOST']
-DB_PORT = os.environ['DB_PORT']
-DB_USER = os.environ['DB_USER']
-DB_PASS = os.environ['DB_PASS']
+MONGODB_URI = os.environ['MONGODB_URI']
+MONGODB_NAME = os.environ['MONGODB_NAME']
+MONGODB_HOST = os.environ['MONGODB_HOST']
+MONGODB_PORT = os.environ['MONGODB_PORT']
+MONGODB_USER = os.environ['MONGODB_USER']
+MONGODB_PASS = os.environ['MONGODB_PASS']
 
-CLIENT = MongoClient(DB_HOST, DB_PORT)
-DB = CLIENT[DB_NAME]
-DB.authenticate(DB_USER, DB_PASS)
+CLIENT = MongoClient(MONGODB_HOST, MONGODB_PORT)
+DB = CLIENT[MONGODB_NAME]
+DB.authenticate(MONGODB_USER, MONGODB_PASS)
 
 # only use active ones in each route
 # histoPricesDB = DB.histoPrices
