@@ -16,7 +16,7 @@ DEBUG = False
 MONGODB_URI = os.environ['MONGODB_URI']
 MONGODB_NAME = os.environ['MONGODB_NAME']
 MONGODB_HOST = os.environ['MONGODB_HOST']
-MONGODB_PORT = os.environ['MONGODB_PORT']
+MONGODB_PORT = int(os.environ['MONGODB_PORT'])
 MONGODB_USER = os.environ['MONGODB_USER']
 MONGODB_PASS = os.environ['MONGODB_PASS']
 
