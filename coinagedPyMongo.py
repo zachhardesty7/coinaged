@@ -10,11 +10,14 @@ import requests
 from time import time
 from binance.client import Client
 import json
+import os
 
 # configs
 DEBUG = False
-SECRET = json.load(fp='secret.json')
-BINANCE_CLIENT = Client(SECRET['binance']['binanceApiKey'], SECRET['binance']['binanceSecret'])
+BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
+BINANCE_SECRET = os.environ['BINANCE_SECRET']
+
+BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
 
 
 #######################
