@@ -1,1 +1,1 @@
-web: gunicorn mongodbapi:app
+web: gunicorn mongodbapi:APP
