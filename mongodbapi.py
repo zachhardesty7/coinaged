@@ -6,20 +6,19 @@ from flask import Flask, jsonify
 from flask_restful import Resource, Api
 from bson.objectid import ObjectId
 from pymongo import MongoClient
-import json
+import os
 
 # configs
 APP = Flask(__name__)
 API = Api(APP)
 
 DEBUG = False
-SECRET = json.load(fp='secret.json')
-DB_URI = SECRET['database']['uri']
-DB_NAME = SECRET['database']['name']
-DB_HOST = SECRET['database']['host']
-DB_PORT = SECRET['database']['port']
-DB_USER = SECRET['database']['user']
-DB_PASS = SECRET['database']['pass']
+DB_URI = os.environ['DB_URI']
+DB_NAME = os.environ['DB_NAME']
+DB_HOST = os.environ['DB_HOST']
+DB_PORT = os.environ['DB_PORT']
+DB_USER = os.environ['DB_USER']
+DB_PASS = os.environ['DB_PASS']
 
 CLIENT = MongoClient(DB_HOST, DB_PORT)
 DB = CLIENT[DB_NAME]
