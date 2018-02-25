@@ -11,6 +11,9 @@ from time import time
 from binance.client import Client
 import json
 import os
+import logging
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 # configs
 DEBUG = False
@@ -236,6 +239,7 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 
 
 def calculateNavCached(transactionsDB, currentPortfolioValue):
+    LOGGER.info('begin nav calc')
     timestamp = getUnixTime()
     global LAST_NAV
     global LAST_TIMESTAMP
@@ -269,6 +273,9 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     # seems to cause unnecessary program restarts
     # updateHerokuVar('LAST_NAV', updatedNav)
     # updateHerokuVar('LAST_TIMESTAMP', timestamp)
+
+    LOGGER.info('end nav calc')
+    LOGGER.info('took %s seconds', getUnixTime() - timestamp)
 
     return updatedNav
 
