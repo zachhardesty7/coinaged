@@ -17,7 +17,6 @@ import sys
 
 import gevent
 import gevent.monkey
-gevent.monkey.patch_socket()
 
 # configs
 DEBUG = True
@@ -466,6 +465,7 @@ def sanitizeTrades(binanceTrades):
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
+    gevent.monkey.patch_socket()
     start = getUnixTimeLog()
     LOGGER.info(currentFuncName() + ': start time: ' + str(start))
 
@@ -507,9 +507,8 @@ def updateTradeDBHelper1(ticker, pid):
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
+        print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
-    LOGGER.info(' took ' + str(getUnixTimeLog() - start) + ' seconds')
     return binanceTrades
 
 
@@ -526,9 +525,8 @@ def updateTradeDBHelper2(ticker, pid):
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
+        print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
-    LOGGER.info(' took ' + str(getUnixTimeLog() - start) + ' seconds')
     return binanceTrades
 
 
