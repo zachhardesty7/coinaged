@@ -505,7 +505,7 @@ def updateTradeDBHelper(ticker, pid):
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        print(pid + ' - ' + tradeTickers + ': ' + time())
+        print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
 
     # REVIEW: why not BTC?
     if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
@@ -515,7 +515,7 @@ def updateTradeDBHelper(ticker, pid):
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        print(pid + ' - ' + tradeTickers + ': ' + time())
+        print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
 
     return binanceTrades
 
