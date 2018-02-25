@@ -497,6 +497,7 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
 
 def updateTradeDBHelper(ticker):
+    ticker = ticker
     print(ticker)
     binanceTrades = []
 
