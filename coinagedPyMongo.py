@@ -260,10 +260,10 @@ def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp):
 
 def updateHerokuVar(key, value):
     herokuApiKey = os.environ['HEROKU_API_KEY']
-    url = 'https://api.heroku.com/apps/' + herokuApiKey + '/config-vars'
+    url = 'https://api.heroku.com/apps/2fd602bb-b85f-41d0-89cb-ddd031908623/config-vars'
     headers = {
         "Accept": "application/vnd.heroku+json; version=3",
-        "Authorization": "Bearer c64e52ea-63a3-4f94-9a93-5b81dc561473",
+        "Authorization": "Bearer " + herokuApiKey,
         "Content-Type": "application/json"
     }
     data = {
