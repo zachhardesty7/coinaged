@@ -498,6 +498,7 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
 
 def updateTradeDBHelper1(ticker, pid):
+    start = getUnixTimeLog()
     binanceTrades = []
 
     # cycle tickers to collect binance trades
@@ -508,11 +509,13 @@ def updateTradeDBHelper1(ticker, pid):
             binanceTrades.append(trade)
         print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
 
+    LOGGER.info(' took ' + str(getUnixTimeLog() - start) + ' seconds')
     return binanceTrades
 
 
 def updateTradeDBHelper2(ticker, pid):
     binanceTrades = []
+    start = getUnixTimeLog()
 
     # cycle tickers to collect binance trades
     # REVIEW: why not BTC?
@@ -525,6 +528,7 @@ def updateTradeDBHelper2(ticker, pid):
             binanceTrades.append(trade)
         print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
 
+    LOGGER.info(' took ' + str(getUnixTimeLog() - start) + ' seconds')
     return binanceTrades
 
 
