@@ -234,8 +234,8 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 
 
 def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp):
-    lastNav = os.environ['LAST_NAV']
-    lastTimestamp = os.environ['LAST_TIMESTAMP']
+    lastNav = float(os.environ['LAST_NAV'])
+    lastTimestamp = int(os.environ['LAST_TIMESTAMP'])
     lastPortfolioValue = 0
 
     # check if any newer nav val in DB
