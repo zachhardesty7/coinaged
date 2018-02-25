@@ -268,6 +268,7 @@ def updateHerokuVar(key, value):
     }
     data = dict()
     data[key] = value
+    data = json.dumps(data)
     r = requests.patch(url=url, headers=headers, data=data)
     print(r.json())
 
