@@ -40,7 +40,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     portfolioValue = getPortfolioValue(portfolioHistoBalance, tickerPrices)
     portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
 
-    curNav = calculateNav(transactionsDB, portfolioValueAggregate, timestamp)
+    curNav = calculateNavCached(transactionsDB, portfolioValueAggregate, timestamp)
 
     output = {
         'time': timestamp,
@@ -218,6 +218,7 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
     newestPortfolioValue = 0
     currentPortfolioValue = currentPortfolioValue
 
+    # check if any newer nav val in DB
     for transaction in transactionsDB.find():
         if(transaction['timestamp'] < timestamp):
             if(transaction['timestamp'] > newestTimestamp):
@@ -230,6 +231,45 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
                 newestPortfolioValue += transaction['amount'] * newestNav
 
     return newestNav * (currentPortfolioValue / newestPortfolioValue)
+
+
+def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp):
+    lastNav = os.environ['LAST_NAV']
+    lastTimestamp = os.environ['LAST_TIMESTAMP']
+    lastPortfolioValue = 0
+
+    # check if any newer nav val in DB
+    for transaction in transactionsDB.find():
+        if(transaction['timestamp'] < timestamp):
+            if(transaction['timestamp'] > lastTimestamp):
+                lastTimestamp = transaction['timestamp']
+                lastNav = transaction['nav']
+
+    for transaction in transactionsDB.find():
+        if(transaction['timestamp'] < timestamp):
+            if(transaction['action'] == 'deposit'):
+                lastPortfolioValue += transaction['amount'] * lastNav
+
+    updatedNav = lastNav * (currentPortfolioValue / lastPortfolioValue)
+
+    updateHerokuVar('LAST_NAV', updatedNav)
+    updateHerokuVar('LAST_TIMESTAMP', timestamp)
+
+    return updatedNav
+
+
+def updateHerokuVar(key, value):
+    url = 'https://api.heroku.com/apps/2fd602bb-b85f-41d0-89cb-ddd031908623/config-vars'
+    headers = {
+        "Accept": "application/vnd.heroku+json; version=3",
+        "Authorization": "Bearer c64e52ea-63a3-4f94-9a93-5b81dc561473",
+        "Content-Type": "application/json"
+    }
+    data = {
+        key: value
+    }
+    r = requests.patch(url=url, headers=headers, data=data)
+    print(r.json())
 
 
 #######################
