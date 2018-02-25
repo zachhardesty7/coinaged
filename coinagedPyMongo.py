@@ -12,14 +12,15 @@ from binance.client import Client
 import json
 import os
 import logging
-logging.basicConfig(level=logging.INFO)
-LOGGER = logging.getLogger(__name__)
 
 # configs
-DEBUG = False
+DEBUG = True
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
+if (DEBUG):
+    logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 LAST_NAV = 1
 LAST_TIMESTAMP = 0
@@ -241,6 +242,8 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 def calculateNavCached(transactionsDB, currentPortfolioValue):
     LOGGER.info('begin nav calc')
     timestamp = getUnixTime()
+    LOGGER.info('start: ' + str(timestamp))
+
     global LAST_NAV
     global LAST_TIMESTAMP
     lastNav = LAST_NAV
@@ -275,7 +278,8 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
     LOGGER.info('end nav calc')
-    LOGGER.info('took %s seconds', getUnixTime() - timestamp)
+    LOGGER.info('end: ' + str(getUnixTime()))
+    LOGGER.info('took ' + str(getUnixTime() - timestamp) + ' seconds')
 
     return updatedNav
 
