@@ -472,7 +472,8 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
     binanceTrades = []
     threads = []
     for i in range(len(tickers)):
-        threads.append(gevent.spawn(updateTradeDBHelper, tickers[i], i))
+        threads.append(gevent.spawn(updateTradeDBHelper1, tickers[i], i))
+        threads.append(gevent.spawn(updateTradeDBHelper2, tickers[i], i))
     gevent.joinall(threads)
     for g in threads:
         for trade in g.value:
@@ -496,7 +497,7 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
 
-def updateTradeDBHelper(ticker, pid):
+def updateTradeDBHelper1(ticker, pid):
     binanceTrades = []
 
     # cycle tickers to collect binance trades
@@ -507,6 +508,13 @@ def updateTradeDBHelper(ticker, pid):
             binanceTrades.append(trade)
         print(str(pid) + ' - ' + tradeTickers + ': ' + str(time()))
 
+    return binanceTrades
+
+
+def updateTradeDBHelper2(ticker, pid):
+    binanceTrades = []
+
+    # cycle tickers to collect binance trades
     # REVIEW: why not BTC?
     if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
         # if(ticker == 'NANO'):
