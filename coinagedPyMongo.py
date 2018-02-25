@@ -7,7 +7,7 @@
 # from pymongo import MongoClient
 from bson.objectid import ObjectId
 import requests
-from time import time
+from time import time, sleep
 from binance.client import Client
 import json
 import os
@@ -277,7 +277,7 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     # updateHerokuVar('LAST_NAV', updatedNav)
     # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
-    time.sleep(5)
+    sleep(5)
     LOGGER.info('end nav calc')
     LOGGER.info('end: ' + str(getUnixTime()))
     LOGGER.info('took ' + str(getUnixTime() - timestamp) + ' seconds')
