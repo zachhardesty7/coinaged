@@ -241,9 +241,9 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 
 def calculateNavCached(transactionsDB, currentPortfolioValue):
     LOGGER.info('begin nav calc')
-    timestamp = getUnixTime()
-    LOGGER.info('start: ' + str(timestamp))
+    LOGGER.info('start: ' + str(getUnixTimeLog()))
 
+    timestamp = getUnixTime()
     global LAST_NAV
     global LAST_TIMESTAMP
     lastNav = LAST_NAV
@@ -277,10 +277,9 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     # updateHerokuVar('LAST_NAV', updatedNav)
     # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
-    sleep(5)
     LOGGER.info('end nav calc')
-    LOGGER.info('end: ' + str(getUnixTime()))
-    LOGGER.info('took ' + str(getUnixTime() - timestamp) + ' seconds')
+    LOGGER.info('end: ' + str(getUnixTimeLog()))
+    LOGGER.info('took ' + str(getUnixTimeLog() - timestamp) + ' seconds')
 
     return updatedNav
 
@@ -428,3 +427,7 @@ def deleteDocs(db, match={}):
 
 def getUnixTime():
     return int(time())
+
+
+def getUnixTimeLog():
+    return time()
