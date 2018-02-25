@@ -277,6 +277,7 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     # updateHerokuVar('LAST_NAV', updatedNav)
     # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
+    time.sleep(5)
     LOGGER.info('end nav calc')
     LOGGER.info('end: ' + str(getUnixTime()))
     LOGGER.info('took ' + str(getUnixTime() - timestamp) + ' seconds')
