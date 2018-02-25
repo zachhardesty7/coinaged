@@ -497,11 +497,13 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
 
 def updateTradeDBHelper(ticker):
+    print(ticker)
     binanceTrades = []
 
     # cycle tickers to collect binance trades
     if(ticker != 'BTC'):
         ticker = ticker + 'BTC'
+        print(ticker)
         trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
@@ -510,6 +512,7 @@ def updateTradeDBHelper(ticker):
         # if(ticker == 'NANO'):
         #     ticker = 'XRB'
         ticker = ticker + 'ETH'
+        print(ticker)
         trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
