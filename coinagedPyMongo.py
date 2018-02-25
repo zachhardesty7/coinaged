@@ -16,8 +16,10 @@ import os
 DEBUG = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
-
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
+
+LAST_NAV = 1
+LAST_TIMESTAMP = 0
 
 
 #######################
@@ -252,8 +254,14 @@ def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp):
 
     updatedNav = lastNav * (currentPortfolioValue / lastPortfolioValue)
 
-    updateHerokuVar('LAST_NAV', updatedNav)
-    updateHerokuVar('LAST_TIMESTAMP', timestamp)
+    global LAST_NAV
+    global LAST_TIMESTAMP
+    LAST_NAV = updatedNav
+    LAST_TIMESTAMP = timestamp
+
+    # seems to cause unnecessary program restarts
+    # updateHerokuVar('LAST_NAV', updatedNav)
+    # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
     return updatedNav
 
@@ -269,8 +277,8 @@ def updateHerokuVar(key, value):
     data = dict()
     data[key] = value
     data = json.dumps(data)
-    r = requests.patch(url=url, headers=headers, data=data)
-    print(r.json())
+    requests.patch(url=url, headers=headers, data=data)
+
 
 #######################
 # user menu functions #
