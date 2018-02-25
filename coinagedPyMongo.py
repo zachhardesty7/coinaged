@@ -466,13 +466,13 @@ def sanitizeTrades(binanceTrades):
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start time: ' + start)
 
     binanceTrades = []
     threads = []
     for i in range(len(tickers)):
-        threads.append(gevent.spawn(updateTradeDBHelper, tickers[i]))
+        threads.append(gevent.spawn(updateTradeDBHelper, tickers[i], i))
     gevent.joinall(threads)
     for g in threads:
         for trade in g.value:
@@ -496,26 +496,26 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
 
-def updateTradeDBHelper(ticker):
-    print(ticker)
+def updateTradeDBHelper(ticker, pid):
     binanceTrades = []
 
     # cycle tickers to collect binance trades
     if(ticker != 'BTC'):
         tradeTickers = ticker + 'BTC'
-        print(ticker)
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
+        print(pid + ' - ' + tradeTickers + ': ' + time())
+
     # REVIEW: why not BTC?
     if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
         # if(ticker == 'NANO'):
         #     ticker = 'XRB'
         tradeTickers = ticker + 'ETH'
-        print(ticker)
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
+        print(pid + ' - ' + tradeTickers + ': ' + time())
 
     return binanceTrades
 
