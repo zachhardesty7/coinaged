@@ -497,24 +497,23 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
 
 def updateTradeDBHelper(ticker):
-    ticker = ticker
     print(ticker)
     binanceTrades = []
 
     # cycle tickers to collect binance trades
     if(ticker != 'BTC'):
-        ticker = ticker + 'BTC'
+        tradeTickers = ticker + 'BTC'
         print(ticker)
-        trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
+        trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
     # REVIEW: why not BTC?
     if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
         # if(ticker == 'NANO'):
         #     ticker = 'XRB'
-        ticker = ticker + 'ETH'
+        tradeTickers = ticker + 'ETH'
         print(ticker)
-        trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
+        trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
 
