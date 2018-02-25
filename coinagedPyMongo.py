@@ -256,8 +256,12 @@ def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp):
 
     global LAST_NAV
     global LAST_TIMESTAMP
+    print("Old Nav: " + LAST_NAV)
+    print("Old TS: " + LAST_TIMESTAMP)
     LAST_NAV = updatedNav
     LAST_TIMESTAMP = timestamp
+    print("New Nav: " + LAST_NAV)
+    print("New TS: " + LAST_TIMESTAMP)
 
     # seems to cause unnecessary program restarts
     # updateHerokuVar('LAST_NAV', updatedNav)
