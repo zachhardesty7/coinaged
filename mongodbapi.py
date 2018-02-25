@@ -1,4 +1,5 @@
 # TODO: speed up nav calculation using cached value of most recently called nav and current nav
+# TODO: write class / function to handle objectid encode / decode
 # future shift to mongo engine
 import coinagedPyMongo
 
@@ -24,14 +25,11 @@ CLIENT = MongoClient(MONGODB_HOST, MONGODB_PORT)
 DB = CLIENT[MONGODB_NAME]
 DB.authenticate(MONGODB_USER, MONGODB_PASS)
 
-# only use active ones in each route
-# histoPricesDB = DB.histoPrices
-# usersDB = DB.users
-# transactionsDB = DB.transactions
-# tradesDB = DB.trades
 
-
-# TODO: write class / function to handle objectid encode / decode
+# @RETURNS: list of users
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/users
 class Users(Resource):
     def get(self):
         users = []
@@ -43,6 +41,10 @@ class Users(Resource):
         return jsonify(users)
 
 
+# @RETURNS: single user's details
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/users/{userId}
 class UsersId(Resource):
     def get(self, userId):
         users = []
@@ -54,12 +56,20 @@ class UsersId(Resource):
         return jsonify(users)
 
 
+# @RETURNS: single user's portfolio
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/users/{userId}/portfolio
 class UsersPortfolio(Resource):
     def get(self, userId):
         account = coinagedPyMongo.getUserAccount(DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
         return jsonify(account)
 
 
+# @RETURNS: all transactions
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/transactions
 class Transactions(Resource):
     def get(self):
         transactions = []
@@ -69,12 +79,20 @@ class Transactions(Resource):
         return jsonify(transactions)
 
 
+# @RETURNS: single transaction's details
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/transactions/{transactionId}
 class TransactionsId(Resource):
     def get(self, transactionId):
         transaction = coinagedPyMongo.getTransaction(DB.transactions, transactionId)
         return jsonify(transaction)
 
 
+# @RETURNS: all trades
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/trades
 class Trades(Resource):
     def get(self):
         trades = []
@@ -84,6 +102,10 @@ class Trades(Resource):
         return jsonify(trades)
 
 
+# @RETURNS: overall portfolio performance
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/portfolio
 class Portfolio(Resource):
     def get(self):
         portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades)
