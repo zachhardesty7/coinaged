@@ -15,9 +15,6 @@ import os
 import logging
 import sys
 
-import gevent
-import gevent.monkey
-
 # configs
 DEBUG = True
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
@@ -465,6 +462,9 @@ def sanitizeTrades(binanceTrades):
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
+    import gevent
+    import gevent.monkey
+
     gevent.monkey.patch_socket()
     start = getUnixTimeLog()
     LOGGER.info(currentFuncName() + ': start time: ' + str(start))
