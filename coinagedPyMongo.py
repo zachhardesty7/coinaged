@@ -240,8 +240,8 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 
 
 def calculateNavCached(transactionsDB, currentPortfolioValue):
-    LOGGER.info('begin nav calc')
-    LOGGER.info('start: ' + str(getUnixTimeLog()))
+    LOGGER.info(':' + currentFuncName() + ': begin nav calc')
+    start = getUnixTimeLog()
 
     timestamp = getUnixTime()
     global LAST_NAV
@@ -266,20 +266,19 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
 
     updatedNav = lastNav * (currentPortfolioValue / lastPortfolioValue)
 
-    print("Old Nav: " + str(LAST_NAV))
-    print("Old TS: " + str(LAST_TIMESTAMP))
+    # print("Old Nav: " + str(LAST_NAV))
+    # print("Old TS: " + str(LAST_TIMESTAMP))
     LAST_NAV = updatedNav
     LAST_TIMESTAMP = timestamp
-    print("New Nav: " + str(LAST_NAV))
-    print("New TS: " + str(LAST_TIMESTAMP))
+    # print("New Nav: " + str(LAST_NAV))
+    # print("New TS: " + str(LAST_TIMESTAMP))
 
     # seems to cause unnecessary program restarts
     # updateHerokuVar('LAST_NAV', updatedNav)
     # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
-    LOGGER.info('end nav calc')
-    LOGGER.info('end: ' + str(getUnixTimeLog()))
-    LOGGER.info('took ' + str(getUnixTimeLog() - timestamp) + ' seconds')
+    LOGGER.info(':' + currentFuncName() + ': end nav calc')
+    LOGGER.info(':' + currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
     return updatedNav
 
@@ -431,3 +430,11 @@ def getUnixTime():
 
 def getUnixTimeLog():
     return time()
+
+
+import sys
+
+# for current func name, specify 0 or no argument.
+# for name of caller of current func, specify 1.
+# for name of caller of caller of current func, specify 2. etc.
+currentFuncName = lambda n=0: sys._getframe(n + 1).f_code.co_name
