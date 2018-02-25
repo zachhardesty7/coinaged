@@ -235,7 +235,8 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
     return newestNav * (currentPortfolioValue / newestPortfolioValue)
 
 
-def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp=int(time())):
+def calculateNavCached(transactionsDB, currentPortfolioValue):
+    timestamp = getUnixTime()
     global LAST_NAV
     global LAST_TIMESTAMP
     lastNav = LAST_NAV
@@ -411,3 +412,7 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
 def deleteDocs(db, match={}):
     db.delete_many(match)
+
+
+def getUnixTime():
+    return int(time())

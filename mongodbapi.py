@@ -109,7 +109,7 @@ class Trades(Resource):
 # @URL: http://api.coinaged.com/portfolio
 class Portfolio(Resource):
     def get(self):
-        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades, int(time()))
+        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades)
         return jsonify(portfolio)
 
 
