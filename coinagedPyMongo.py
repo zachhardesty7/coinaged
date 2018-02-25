@@ -9,10 +9,15 @@ from bson.objectid import ObjectId
 import requests
 from time import time
 from binance.client import Client
+
 import json
 import os
 import logging
 import sys
+
+import gevent
+import gevent.monkey
+gevent.monkey.patch_socket()
 
 # configs
 DEBUG = True
@@ -461,6 +466,58 @@ def sanitizeTrades(binanceTrades):
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
+    LOGGER.info(currentFuncName() + ': start')
+    start = getUnixTimeLog()
+
+    binanceTrades = []
+    threads = []
+    for i in range(len(tickers)):
+        threads.append(gevent.spawn(updateTradeDBHelper, i))
+    gevent.joinall(threads)
+    for g in threads:
+        for trade in g.value:
+            binanceTrades.append(trade)
+
+    binanceTrades = sanitizeTrades(binanceTrades)
+
+    # add if not in DB
+    for binanceTrade in binanceTrades:
+        dbNumTrades = tradesDB.count({'orderId': binanceTrade['orderId']})
+        if(dbNumTrades == 0):
+            tradesDB.insert_one(binanceTrade)
+
+    # add old trades from JSON in DB
+    JSONtrades = json.load(open('oldTrades.json'))
+    for JSONtrade in JSONtrades['data']:
+        if(not tradesDB.count(JSONtrade)):
+            tradesDB.insert_one(JSONtrade)
+
+    LOGGER.info(currentFuncName() + ': end')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+
+
+def updateTradeDBHelper(ticker):
+    binanceTrades = []
+
+    # cycle tickers to collect binance trades
+    if(ticker != 'BTC'):
+        ticker = ticker + 'BTC'
+        trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
+        for trade in trades:
+            binanceTrades.append(trade)
+    # REVIEW: why not BTC?
+    if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
+        # if(ticker == 'NANO'):
+        #     ticker = 'XRB'
+        ticker = ticker + 'ETH'
+        trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
+        for trade in trades:
+            binanceTrades.append(trade)
+
+    return binanceTrades
+
+
+def updateTradeDBBak(tradesDB, transactionsDB, tickers):
     LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
 
