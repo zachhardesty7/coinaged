@@ -266,10 +266,9 @@ def updateHerokuVar(key, value):
         "Authorization": "Bearer " + herokuApiKey,
         "Content-Type": "application/json"
     }
-    data = dict(zip(key, value))
+    data = dict(zip((key, value)))
     r = requests.patch(url=url, headers=headers, data=data)
     print(r.json())
-
 
 #######################
 # user menu functions #
