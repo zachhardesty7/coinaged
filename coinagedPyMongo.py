@@ -467,7 +467,7 @@ def sanitizeTrades(binanceTrades):
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
     start = getUnixTimeLog()
-    LOGGER.info(currentFuncName() + ': start time: ' + start)
+    LOGGER.info(currentFuncName() + ': start time: ' + str(start))
 
     binanceTrades = []
     threads = []
