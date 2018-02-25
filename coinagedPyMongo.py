@@ -42,7 +42,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     portfolioValue = getPortfolioValue(portfolioHistoBalance, tickerPrices)
     portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
 
-    curNav = calculateNavCached(transactionsDB, portfolioValueAggregate, timestamp)
+    curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
 
     output = {
         'time': timestamp,
@@ -235,7 +235,7 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
     return newestNav * (currentPortfolioValue / newestPortfolioValue)
 
 
-def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp):
+def calculateNavCached(transactionsDB, currentPortfolioValue, timestamp=int(time())):
     global LAST_NAV
     global LAST_TIMESTAMP
     lastNav = LAST_NAV

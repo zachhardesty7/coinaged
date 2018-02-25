@@ -8,6 +8,7 @@ from flask_restful import Resource, Api
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 import os
+from time import time
 
 # configs
 APP = Flask(__name__)
@@ -108,7 +109,7 @@ class Trades(Resource):
 # @URL: http://api.coinaged.com/portfolio
 class Portfolio(Resource):
     def get(self):
-        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades)
+        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades, int(time()))
         return jsonify(portfolio)
 
 
