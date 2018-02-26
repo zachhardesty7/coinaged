@@ -213,7 +213,7 @@ def getTickerPrices(tickers, timestamp=int(time())):
         threads.append(gevent.spawn(getTickerPrice, tickers[i], 'USD'))
     gevent.joinall(threads)
     for g in threads:
-        prices[g.value[1]] = g.value[0]
+        prices[g.value[0]] = g.value[1]
 
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
