@@ -15,6 +15,11 @@ import os
 import logging
 import sys
 
+import gevent
+import gevent.monkey
+
+gevent.monkey.patch_socket()
+
 # configs
 DEBUG = True
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
@@ -166,6 +171,25 @@ def getTickerPrices(tickers, timestamp=int(time())):
     start = getUnixTimeLog()
 
     prices = {}
+
+    threads = []
+    for i in range(len(tickers)):
+        threads.append(gevent.spawn(getTickerPrice, tickers[i], 'USD'))
+    gevent.joinall(threads)
+    for g in threads:
+        prices[g.value[1]] = g.value[0]
+
+    LOGGER.info(currentFuncName() + ': end')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+
+    return prices
+
+
+def getTickerPricesBak(tickers, timestamp=int(time())):
+    LOGGER.info(currentFuncName() + ': start')
+    start = getUnixTimeLog()
+
+    prices = {}
     url = 'https://min-api.cryptocompare.com/data/pricehistorical'
 
     for ticker in tickers:
@@ -195,6 +219,7 @@ def getTickerPrices(tickers, timestamp=int(time())):
 
 
 def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
+    tickerOut = ticker1
     LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
 
@@ -225,7 +250,7 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
-    return price
+    return [tickerOut, price]
 
 
 def getPortfolioHistoBalance(portfolioBalance, portfolioTrades, portfolioTransactions, timestamp=int(time())):
@@ -462,10 +487,6 @@ def sanitizeTrades(binanceTrades):
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
-    import gevent
-    import gevent.monkey
-
-    gevent.monkey.patch_socket()
     start = getUnixTimeLog()
     LOGGER.info(currentFuncName() + ': start time: ' + str(start))
 
@@ -507,7 +528,7 @@ def updateTradeDBHelper1(ticker, pid):
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+        # print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
     return binanceTrades
 
@@ -525,7 +546,7 @@ def updateTradeDBHelper2(ticker, pid):
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+        # print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
     return binanceTrades
 
