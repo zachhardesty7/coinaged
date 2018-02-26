@@ -254,7 +254,7 @@ def getTickerPricesBak(tickers, timestamp=int(time())):
     return prices
 
 
-@gevent_throttle(15)
+@gevent_throttle(12)
 def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     tickerOut = ticker1
     LOGGER.info(currentFuncName() + ': start')
