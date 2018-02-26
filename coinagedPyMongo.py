@@ -17,6 +17,9 @@ import sys
 
 import gevent
 import gevent.monkey
+from functools import wraps
+from timeit import default_timer
+from gevent.queue import Queue
 
 gevent.monkey.patch_socket()
 
@@ -31,6 +34,36 @@ LOGGER = logging.getLogger(__name__)
 
 LAST_NAV = 1
 LAST_TIMESTAMP = 0
+
+
+def gevent_throttle(calls_per_sec=0):
+    """Decorates a Greenlet function for throttling."""
+    interval = 1. / calls_per_sec if calls_per_sec else 0
+
+    def decorate(func):
+        blocked = [False]  # has to be a list to not get localised inside the while loop
+        # otherwise, UnboundLocalError: local variable 'blocked' referenced before assignment
+        last_time = [0]  # ditto
+
+        @wraps(func)  # propagates docstring
+        def throttled_func(*args, **kwargs):
+            while True:
+                # give other greenlets a chance to run, otherwise we
+                # might get stuck while working thread is sleeping and the block is ON
+                gevent.sleep(0)
+                if not blocked[0]:
+                    blocked[0] = True
+                    # check if actually might need to pause
+                    if calls_per_sec:
+                        last, current = last_time[0], default_timer()
+                        elapsed = current - last
+                        if elapsed < interval:
+                            gevent.sleep(interval - elapsed)
+                        last_time[0] = default_timer()
+                    blocked[0] = False
+                    return func(*args, **kwargs)
+        return throttled_func
+    return decorate
 
 
 #######################
@@ -218,6 +251,7 @@ def getTickerPricesBak(tickers, timestamp=int(time())):
     return prices
 
 
+@gevent_throttle(15)
 def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     tickerOut = ticker1
     LOGGER.info(currentFuncName() + ': start')
