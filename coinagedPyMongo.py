@@ -152,9 +152,6 @@ def getPortfolioValue(portfolioBalance, prices, time=int(time())):
 
     portfolioValue = {}
 
-    print(portfolioBalance.items())
-    print(prices)
-
     for ticker, balance in portfolioBalance.items():
         if(balance > 0):
             portfolioValue[ticker] = balance * prices[ticker]
@@ -254,11 +251,9 @@ def getTickerPricesBak(tickers, timestamp=int(time())):
     return prices
 
 
-@gevent_throttle(12)
+@gevent_throttle(14)
 def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
-    tickerOut = ticker1
-    LOGGER.info(currentFuncName() + ': start')
-    start = getUnixTimeLog()
+    tickerOrig = ticker1
 
     price = 0
     url = 'https://min-api.cryptocompare.com/data/pricehistorical'
@@ -282,13 +277,9 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
         'ts': timestamp
     }
     r = requests.get(url=url, params=params)
-    print(r.json())
     price = r.json()[ticker1][ticker2]
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
-
-    return [tickerOut, price]
+    return [tickerOrig, price]
 
 
 def getPortfolioHistoBalance(portfolioBalance, portfolioTrades, portfolioTransactions, timestamp=int(time())):
