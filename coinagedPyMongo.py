@@ -78,7 +78,8 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     tickers = getTickers()
     tickerPrices = getTickerPrices(tickers, timestamp)
     portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
-    updateTradeDB(tradesDB, transactionsDB, tickers)
+    if(abs(timestamp - LAST_TIMESTAMP) > 3600):
+        updateTradeDB(tradesDB, transactionsDB, tickers)
     portfolioTrades = getPortfolioTrades(tradesDB)
     portfolioBalance = getPortfolioBalance()
     portfolioTransactions = getPortfolioTransactions(transactionsDB)
