@@ -245,7 +245,7 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
         'ts': timestamp
     }
     r = requests.get(url=url, params=params)
-    print(r.json)
+    print(r.json())
     price = r.json()[ticker1][ticker2]
 
     LOGGER.info(currentFuncName() + ': end')
