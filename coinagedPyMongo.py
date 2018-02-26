@@ -19,12 +19,10 @@ import gevent
 import gevent.monkey
 from functools import wraps
 from timeit import default_timer
-from gevent.queue import Queue
-
 gevent.monkey.patch_socket()
 
 # configs
-DEBUG = True
+DEBUG = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
