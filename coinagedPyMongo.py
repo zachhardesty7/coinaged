@@ -1,4 +1,3 @@
-# TODO: function conversion to final product - research debug mode style
 # TODO: clean get user val and get portfolioValue
 # TODO: implement proper backtracking for calculating value
 # TODO: mongoengine full swap
@@ -28,6 +27,7 @@ LOCAL = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
+
 if (DEBUG):
     logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
@@ -287,6 +287,7 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     r = r.json()
     if 'message' in r:
         price = None
+        LOGGER.warn(ticker1 + ' is not registered on cryptocompare api, being ignored')
     else:
         price = r[ticker1][ticker2]
 
