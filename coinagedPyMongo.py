@@ -284,7 +284,11 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
         'ts': timestamp
     }
     r = requests.get(url=url, params=params)
-    price = r.json()[ticker1][ticker2]
+    r = r.json()
+    if 'message' in r:
+        price = None
+    else:
+        price = r[ticker1][ticker2]
 
     return [tickerOrig, price]
 
