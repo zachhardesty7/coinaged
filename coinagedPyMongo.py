@@ -285,7 +285,7 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     }
     r = requests.get(url=url, params=params)
     r = r.json()
-    if 'message' in r:
+    if 'Response' in r:
         price = None
         LOGGER.warn(ticker1 + ' is not registered on cryptocompare api, being ignored')
     else:
