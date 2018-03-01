@@ -155,7 +155,12 @@ def getPortfolioValue(portfolioBalance, prices, time=int(time())):
 
     portfolioValue = {}
 
-    for ticker, balance in portfolioBalance.items():
+    # for ticker, balance in portfolioBalance.items():
+    #     if(balance > 0):
+    #         portfolioValue[ticker] = balance * prices[ticker]
+    #
+    for ticker, price in prices.items():
+        balance = portfolioBalance[ticker]
         if(balance > 0):
             portfolioValue[ticker] = balance * prices[ticker]
 
