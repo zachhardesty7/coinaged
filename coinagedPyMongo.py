@@ -23,6 +23,7 @@ gevent.monkey.patch_socket()
 
 # configs
 DEBUG = False
+# TODO: create local mode for testing api
 LOCAL = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
@@ -285,8 +286,6 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     r = requests.get(url=url, params=params)
     price = r.json()[ticker1][ticker2]
 
-    LOGGER.info(tickerOrig, price)
-
     return [tickerOrig, price]
 
 
@@ -373,8 +372,7 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     global LAST_TIMESTAMP
     lastNav = LAST_NAV
     lastTimestamp = LAST_TIMESTAMP
-    # lastNav = float(os.environ['LAST_NAV'])
-    # lastTimestamp = int(os.environ['LAST_TIMESTAMP'])
+
     lastPortfolioValue = 0
 
     # check if any newer nav val in DB
@@ -391,36 +389,13 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
 
     updatedNav = lastNav * (currentPortfolioValue / lastPortfolioValue)
 
-    # print("Old Nav: " + str(LAST_NAV))
-    # print("Old TS: " + str(LAST_TIMESTAMP))
     LAST_NAV = updatedNav
     LAST_TIMESTAMP = timestamp
-    # print("New Nav: " + str(LAST_NAV))
-    # print("New TS: " + str(LAST_TIMESTAMP))
-
-    # seems to cause unnecessary program restarts
-    # updateHerokuVar('LAST_NAV', updatedNav)
-    # updateHerokuVar('LAST_TIMESTAMP', timestamp)
 
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
     return updatedNav
-
-
-# unused
-def updateHerokuVar(key, value):
-    herokuApiKey = os.environ['HEROKU_API_KEY']
-    url = 'https://api.heroku.com/apps/2fd602bb-b85f-41d0-89cb-ddd031908623/config-vars'
-    headers = {
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Authorization": "Bearer " + herokuApiKey,
-        "Content-Type": "application/json"
-    }
-    data = dict()
-    data[key] = value
-    data = json.dumps(data)
-    requests.patch(url=url, headers=headers, data=data)
 
 
 #######################
