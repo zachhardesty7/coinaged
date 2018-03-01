@@ -543,8 +543,9 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
     threads = []
     i = 0
     for ticker in tickers:
-        threads.append(gevent.spawn(updateTradeDBHelper1, tickers[i], i))
-        threads.append(gevent.spawn(updateTradeDBHelper2, tickers[i], i))
+        pid = i
+        threads.append(gevent.spawn(updateTradeDBHelper1, ticker, pid))
+        threads.append(gevent.spawn(updateTradeDBHelper2, ticker, pid))
         i += 1
     gevent.joinall(threads)
     for g in threads:
