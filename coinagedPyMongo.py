@@ -77,11 +77,11 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     tickers = getTickers()
     # probably use some type of caching to speed up api response time
     tickerPrices = getTickerPrices(tickers, timestamp)
-    tickers = updateTickers(tickers, tickerPrices)
+    # tickers = updateTickers(tickers, tickerPrices)
 
     portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
     if(abs(timestamp - LAST_TIMESTAMP) > 3600):
-        updateTradeDB(tradesDB, transactionsDB, tickers)
+        updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
     portfolioTrades = getPortfolioTrades(tradesDB)
     portfolioBalance = getPortfolioBalance()
     portfolioTransactions = getPortfolioTransactions(transactionsDB)
