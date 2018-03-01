@@ -22,7 +22,7 @@ from timeit import default_timer
 gevent.monkey.patch_socket()
 
 # configs
-DEBUG = False
+DEBUG = True
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
@@ -34,6 +34,7 @@ LAST_NAV = 1
 LAST_TIMESTAMP = 0
 
 
+# source: https://gist.github.com/p7k/4238388
 def gevent_throttle(calls_per_sec=0):
     """Decorates a Greenlet function for throttling."""
     interval = 1. / calls_per_sec if calls_per_sec else 0
@@ -74,6 +75,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     start = getUnixTimeLog()
 
     tickers = getTickers()
+    # probably use some type of caching to speed up api response time
     tickerPrices = getTickerPrices(tickers, timestamp)
     portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
     if(abs(timestamp - LAST_TIMESTAMP) > 3600):
@@ -278,6 +280,8 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     r = requests.get(url=url, params=params)
     price = r.json()[ticker1][ticker2]
 
+    LOGGER.info(tickerOrig, price)
+
     return [tickerOrig, price]
 
 
@@ -399,6 +403,7 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     return updatedNav
 
 
+# unused
 def updateHerokuVar(key, value):
     herokuApiKey = os.environ['HEROKU_API_KEY']
     url = 'https://api.heroku.com/apps/2fd602bb-b85f-41d0-89cb-ddd031908623/config-vars'
@@ -547,7 +552,7 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
 
 def updateTradeDBHelper1(ticker, pid):
-    start = getUnixTimeLog()
+    # start = getUnixTimeLog()
     binanceTrades = []
 
     # cycle tickers to collect binance trades
@@ -563,7 +568,7 @@ def updateTradeDBHelper1(ticker, pid):
 
 def updateTradeDBHelper2(ticker, pid):
     binanceTrades = []
-    start = getUnixTimeLog()
+    # start = getUnixTimeLog()
 
     # cycle tickers to collect binance trades
     # REVIEW: why not BTC?
