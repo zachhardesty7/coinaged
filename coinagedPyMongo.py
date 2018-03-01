@@ -541,9 +541,11 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
 
     binanceTrades = []
     threads = []
-    for i in range(len(tickers)):
+    i = 0
+    for ticker in tickers:
         threads.append(gevent.spawn(updateTradeDBHelper1, tickers[i], i))
         threads.append(gevent.spawn(updateTradeDBHelper2, tickers[i], i))
+        i += 1
     gevent.joinall(threads)
     for g in threads:
         for trade in g.value:
