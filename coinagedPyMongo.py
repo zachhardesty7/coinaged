@@ -23,6 +23,7 @@ gevent.monkey.patch_socket()
 
 # configs
 DEBUG = False
+LOCAL = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
@@ -75,11 +76,10 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     start = getUnixTimeLog()
 
     tickers = getTickers()
-    # probably use some type of caching to speed up api response time
     tickerPrices = getTickerPrices(tickers, timestamp)
-    # tickers = updateTickers(tickers, tickerPrices)
 
     portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
+    # only update hourly
     if(abs(timestamp - LAST_TIMESTAMP) > 3600):
         updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
     portfolioTrades = getPortfolioTrades(tradesDB)
@@ -155,10 +155,6 @@ def getPortfolioValue(portfolioBalance, prices, time=int(time())):
 
     portfolioValue = {}
 
-    # for ticker, balance in portfolioBalance.items():
-    #     if(balance > 0):
-    #         portfolioValue[ticker] = balance * prices[ticker]
-    #
     for ticker, price in prices.items():
         balance = portfolioBalance[ticker]
         if(balance > 0):
@@ -207,18 +203,6 @@ def getTickers():
     return tickers
 
 
-def updateTickers(tickers, tickerPrices):
-    print(tickers)
-    print(tickerPrices)
-
-    newTickers = []
-
-    for ticker, price in tickerPrices:
-        newTickers.append(ticker)
-
-    return newTickers
-
-
 def getTickerPrices(tickers, timestamp=int(time())):
     LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
@@ -230,7 +214,6 @@ def getTickerPrices(tickers, timestamp=int(time())):
         threads.append(gevent.spawn(getTickerPrice, tickers[i], 'USD'))
     gevent.joinall(threads)
     for g in threads:
-        print(g.value)
         if(g.value is not None):
             prices[g.value[0]] = g.value[1]
 
@@ -273,6 +256,7 @@ def getTickerPricesBak(tickers, timestamp=int(time())):
     return prices
 
 
+# can fail in weird cases where tickers don't exist in price data and doesn't break anything
 @gevent_throttle(14)
 def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     tickerOrig = ticker1
