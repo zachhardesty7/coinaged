@@ -22,7 +22,7 @@ from timeit import default_timer
 gevent.monkey.patch_socket()
 
 # configs
-DEBUG = True
+DEBUG = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
@@ -225,7 +225,9 @@ def getTickerPrices(tickers, timestamp=int(time())):
         threads.append(gevent.spawn(getTickerPrice, tickers[i], 'USD'))
     gevent.joinall(threads)
     for g in threads:
-        prices[g.value[0]] = g.value[1]
+        print(g.value)
+        if(g.value is not None):
+            prices[g.value[0]] = g.value[1]
 
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
