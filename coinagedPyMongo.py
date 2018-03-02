@@ -201,6 +201,8 @@ def getTickers():
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
+    print(tickers)
+
     return tickers
 
 
@@ -211,8 +213,8 @@ def getTickerPrices(tickers, timestamp=int(time())):
     prices = {}
 
     threads = []
-    for i in range(len(tickers)):
-        threads.append(gevent.spawn(getTickerPrice, tickers[i], 'USD'))
+    for ticker in tickers.items():
+        threads.append(gevent.spawn(getTickerPrice, ticker, 'USD'))
     gevent.joinall(threads)
     for g in threads:
         if(g.value is not None):
@@ -220,6 +222,8 @@ def getTickerPrices(tickers, timestamp=int(time())):
 
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+
+    print(prices)
 
     return prices
 
