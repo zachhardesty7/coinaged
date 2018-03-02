@@ -217,7 +217,7 @@ def getTickerPrices(tickers, timestamp=int(time())):
         threads.append(gevent.spawn(getTickerPrice, ticker, 'USD'))
     gevent.joinall(threads)
     for g in threads:
-        if(g.value[1] is not None):
+        if(g.value is not None):
             prices[g.value[0]] = g.value[1]
 
     LOGGER.info(currentFuncName() + ': end')
@@ -290,8 +290,8 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     r = requests.get(url=url, params=params)
     r = r.json()
     if 'Response' in r:
-        price = None
         LOGGER.warn(ticker1 + ' is not registered on cryptocompare api, being ignored')
+        return None
     else:
         price = r[ticker1][ticker2]
 
