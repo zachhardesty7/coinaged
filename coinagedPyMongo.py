@@ -213,7 +213,7 @@ def getTickerPrices(tickers, timestamp=int(time())):
     prices = {}
 
     threads = []
-    for ticker in tickers.items():
+    for ticker in tickers:
         threads.append(gevent.spawn(getTickerPrice, ticker, 'USD'))
     gevent.joinall(threads)
     for g in threads:
