@@ -217,7 +217,7 @@ def getTickerPrices(tickers, timestamp=int(time())):
         threads.append(gevent.spawn(getTickerPrice, ticker, 'USD'))
     gevent.joinall(threads)
     for g in threads:
-        if(g.value is not None):
+        if(g.value[1] is not None):
             prices[g.value[0]] = g.value[1]
 
     LOGGER.info(currentFuncName() + ': end')
