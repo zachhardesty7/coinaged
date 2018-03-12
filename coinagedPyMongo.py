@@ -117,11 +117,11 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
         print('balance: ' + str(portfolioHistoBalance[ticker]))
         print('price: ' + str(tickerPrices[ticker]))
     #     print('value: ' + str(portfolioValue[ticker]))
-        output['tickers'][ticker] = {
-            'quantity': portfolioHistoBalance[ticker],
-            'price': tickerPrices[ticker],
-    #         'value': portfolioValue[ticker]
-        }
+    #     output['tickers'][ticker] = {
+    #         'quantity': portfolioHistoBalance[ticker],
+    #         'price': tickerPrices[ticker],
+    # #         'value': portfolioValue[ticker]
+    #     }
 
     print(output)
 
