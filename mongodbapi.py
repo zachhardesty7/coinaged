@@ -10,11 +10,13 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 import os
 from time import time
+import logging
 
 # configs
 APP = Flask(__name__)
 CORS(APP)
 API = Api(APP)
+CORS(API)
 
 DEBUG = False
 MONGODB_URI = os.environ['MONGODB_URI']
@@ -27,6 +29,8 @@ MONGODB_PASS = os.environ['MONGODB_PASS']
 CLIENT = MongoClient(MONGODB_HOST, MONGODB_PORT)
 DB = CLIENT[MONGODB_NAME]
 DB.authenticate(MONGODB_USER, MONGODB_PASS)
+
+logging.getLogger('flask_cors').level = logging.DEBUG
 
 
 # @RETURNS: list of users
