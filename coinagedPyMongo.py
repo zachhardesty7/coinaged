@@ -97,6 +97,12 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     output = {
         'time': timestamp,
+        'tickers': {
+            'list': tickers,
+            'balances': portfolioHistoBalance,
+            'prices': tickerPrices,
+            'values': portfolioValue
+        },
         'nav': curNav,
         'principle': portfolioPrinciple,
         'value': portfolioValueAggregate,
@@ -201,8 +207,6 @@ def getTickers():
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
-    print(tickers)
-
     return tickers
 
 
@@ -222,8 +226,6 @@ def getTickerPrices(tickers, timestamp=int(time())):
 
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
-
-    print(prices)
 
     return prices
 
@@ -287,10 +289,9 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
         'market': 'BitTrex',
         'ts': timestamp
     }
-    r = requests.get(url=url, params=params)
-    r = r.json()
+    r = requests.get(url=url, params=params).json()
     if 'Response' in r:
-        LOGGER.warn(ticker1 + ' is not registered on cryptocompare api, being ignored')
+        LOGGER.warn(ticker1 + ' is not registered on the cryptocompare api, ticker will be ignored')
         return None
     else:
         price = r[ticker1][ticker2]
