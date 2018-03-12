@@ -111,6 +111,8 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
             'value': portfolioValue[i]
         }
 
+    print(output)
+
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
