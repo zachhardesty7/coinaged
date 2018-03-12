@@ -5,6 +5,7 @@ import coinagedPyMongo
 
 from flask import Flask, jsonify
 from flask_restful import Resource, Api
+from flask_cors import CORS, cross_origin
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 import os
@@ -12,6 +13,7 @@ from time import time
 
 # configs
 APP = Flask(__name__)
+CORS(APP)
 API = Api(APP)
 
 DEBUG = False
