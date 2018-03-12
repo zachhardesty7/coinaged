@@ -112,7 +112,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     # print(portfolioHistoBalance)
     # print(tickerPrices)
     print(portfolioValue)
-    for ticker in portfolioHistoBalance:
+    for ticker in portfolioHistoBalance.items():
         print(ticker)
         print('balance: ' + str(portfolioHistoBalance[ticker]))
         print('price: ' + str(tickerPrices[ticker]))
