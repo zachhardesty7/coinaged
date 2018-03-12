@@ -104,25 +104,16 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
         'performance': int((portfolioValueAggregate - portfolioPrinciple) / portfolioPrinciple * 100) / 100
     }
 
-    # for i in range(0, len(portfolioHistoBalance)):
-    # print(output['tickers'])
-    # print(portfolioHistoBalance.keys())
-    # print(portfolioHistoBalance.keys()[i])
-    # print(output['tickers'][portfolioHistoBalance.keys()[i]])
-    # print(portfolioHistoBalance)
-    # print(tickerPrices)
-    print(portfolioValue)
-    print(portfolioHistoBalance.items())
-    for ticker, _ in portfolioHistoBalance.items():
+    for ticker, _ in tickerPrices.items():
         print(ticker)
         print('balance: ' + str(portfolioHistoBalance[ticker]))
         print('price: ' + str(tickerPrices[ticker]))
-    #     print('value: ' + str(portfolioValue[ticker]))
-    #     output['tickers'][ticker] = {
-    #         'quantity': portfolioHistoBalance[ticker],
-    #         'price': tickerPrices[ticker],
-    # #         'value': portfolioValue[ticker]
-    #     }
+        print('value: ' + str(portfolioValue[ticker]))
+        output['tickers'][ticker] = {
+            'quantity': portfolioHistoBalance[ticker],
+            'price': tickerPrices[ticker],
+            'value': portfolioValue[ticker]
+        }
 
     print(output)
 
