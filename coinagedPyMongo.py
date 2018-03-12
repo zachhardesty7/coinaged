@@ -95,6 +95,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
 
+    # add portfolio data to output
     output = {
         'time': timestamp,
         'tickers': {},
@@ -104,18 +105,13 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
         'performance': int((portfolioValueAggregate - portfolioPrinciple) / portfolioPrinciple * 100) / 100
     }
 
+    # add all ticker data to output
     for ticker, _ in tickerPrices.items():
-        print(ticker)
-        print('balance: ' + str(portfolioHistoBalance[ticker]))
-        print('price: ' + str(tickerPrices[ticker]))
-        print('value: ' + str(portfolioValue[ticker]))
         output['tickers'][ticker] = {
             'quantity': portfolioHistoBalance[ticker],
             'price': tickerPrices[ticker],
             'value': portfolioValue[ticker]
         }
-
-    print(output)
 
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
