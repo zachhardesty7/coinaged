@@ -109,6 +109,13 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
         'performance': int((portfolioValueAggregate - portfolioPrinciple) / portfolioPrinciple * 100) / 100
     }
 
+    for i in range(0, len(portfolioHistoBalance)):
+        output['tickers'][portfolioHistoBalance[i]] = {
+            'quantity': portfolioHistoBalance[i],
+            'price': tickerPrices[i],
+            'value': portfolioValue[i]
+        }
+
     LOGGER.info(currentFuncName() + ': end')
     LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
