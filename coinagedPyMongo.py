@@ -105,7 +105,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     }
 
     for i in range(0, len(portfolioHistoBalance)):
-        output['tickers'][portfolioHistoBalance[i]] = {
+        output['tickers'][portfolioHistoBalance.kets()[i]] = {
             'quantity': portfolioHistoBalance[i],
             'price': tickerPrices[i],
             'value': portfolioValue[i]
