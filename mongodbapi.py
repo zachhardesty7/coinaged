@@ -16,7 +16,6 @@ import logging
 APP = Flask(__name__)
 CORS(APP)
 API = Api(APP)
-CORS(API)
 
 DEBUG = False
 MONGODB_URI = os.environ['MONGODB_URI']
