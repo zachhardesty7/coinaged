@@ -97,12 +97,7 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     output = {
         'time': timestamp,
-        'tickers': {
-            'list': tickers,
-            'balances': portfolioHistoBalance,
-            'prices': tickerPrices,
-            'values': portfolioValue
-        },
+        'tickers': {},
         'nav': curNav,
         'principle': portfolioPrinciple,
         'value': portfolioValueAggregate,
