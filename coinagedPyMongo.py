@@ -21,14 +21,12 @@ from timeit import default_timer
 gevent.monkey.patch_socket()
 
 # configs
-DEBUG = False
-# TODO: create local mode for testing api
-LOCAL = False
+DEBUG = True
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
 
-if (DEBUG):
+if DEBUG:
     logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +40,9 @@ def gevent_throttle(calls_per_sec=0):
     interval = 1. / calls_per_sec if calls_per_sec else 0
 
     def decorate(func):
-        blocked = [False]  # has to be a list to not get localised inside the while loop
+        blocked = [
+            False
+        ]  # has to be a list to not get localised inside the while loop
         # otherwise, UnboundLocalError: local variable 'blocked' referenced before assignment
         last_time = [0]  # ditto
 
@@ -63,7 +63,9 @@ def gevent_throttle(calls_per_sec=0):
                         last_time[0] = default_timer()
                     blocked[0] = False
                     return func(*args, **kwargs)
+
         return throttled_func
+
     return decorate
 
 
@@ -72,23 +74,147 @@ def gevent_throttle(calls_per_sec=0):
 #######################
 
 
-def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
-    LOGGER.info(currentFuncName() + ': start')
+def getPortfolio3Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
+
+    tickers = getTickers()
+
+    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical
+    tickerPrices = getTickerPricesHisto3Day(tickers)
+
+    # only update trades hourly
+    if timestamp - LAST_TIMESTAMP > 3600:
+        updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
+
+    portfolioTrades = getPortfolioTrades(tradesDB)
+    portfolioTransactions = getPortfolioTransactions(transactionsDB)
+    portfolioBalance = getPortfolioBalance()
+
+    output = []
+
+    for i in range(0, 24):
+        ts = list(tickerPrices.values())[0][i]['timestamp']
+        portfolioPrinciple = getPortfolioPrinciple(transactionsDB, ts)
+        portfolioHistoBalance = getPortfolioHistoBalance(
+            portfolioBalance, portfolioTrades, portfolioTransactions, ts)
+
+        tickerPricesHour = {}
+        # build day
+        for ticker, data in tickerPrices.items():
+            tickerPricesHour[ticker] = data[i]['price']
+
+        portfolioValue = getPortfolioValue(portfolioHistoBalance,
+                                           tickerPricesHour)
+        portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
+        curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
+
+        performance = int((portfolioValueAggregate - portfolioPrinciple
+                           ) / portfolioPrinciple * 100) / 100
+
+        periodData = {
+            'timestamp': ts,
+            'principle': portfolioPrinciple,
+            'value': portfolioValueAggregate,
+            'nav': curNav,
+            'tickers': {},
+            'performance': performance
+        }
+        # add all ticker data to output
+        for ticker, value in portfolioValue.items():
+            periodData['tickers'][ticker] = {
+                'quantity': portfolioHistoBalance[ticker],
+                'price': tickerPricesHour[ticker],
+                'value': value
+            }
+
+        output.append(periodData)
+
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
+
+    return output
+
+
+def getPortfolio1Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
+    start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
+
+    tickers = getTickers()
+
+    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical
+    tickerPrices = getTickerPricesHisto1Day(tickers)
+
+    # only update trades hourly
+    if timestamp - LAST_TIMESTAMP > 3600:
+        updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
+
+    portfolioTrades = getPortfolioTrades(tradesDB)
+    portfolioTransactions = getPortfolioTransactions(transactionsDB)
+    portfolioBalance = getPortfolioBalance()
+
+    output = []
+
+    for i in range(0, 24):
+        ts = list(tickerPrices.values())[0][i]['timestamp']
+        portfolioPrinciple = getPortfolioPrinciple(transactionsDB, ts)
+        portfolioHistoBalance = getPortfolioHistoBalance(
+            portfolioBalance, portfolioTrades, portfolioTransactions, ts)
+
+        tickerPricesHour = {}
+        # build day
+        for ticker, data in tickerPrices.items():
+            tickerPricesHour[ticker] = data[i]['price']
+
+        portfolioValue = getPortfolioValue(portfolioHistoBalance,
+                                           tickerPricesHour)
+        portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
+        curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
+
+        performance = int((portfolioValueAggregate - portfolioPrinciple
+                           ) / portfolioPrinciple * 100) / 100
+
+        periodData = {
+            'timestamp': ts,
+            'principle': portfolioPrinciple,
+            'value': portfolioValueAggregate,
+            'nav': curNav,
+            'tickers': {},
+            'performance': performance
+        }
+        for ticker, value in portfolioValue.items():
+            periodData['tickers'][ticker] = {
+                'quantity': portfolioHistoBalance[ticker],
+                'price': tickerPricesHour[ticker],
+                'value': value
+            }
+
+        output.append(periodData)
+
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
+
+    return output
+
+
+def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
+    start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     tickers = getTickers()
     tickerPrices = getTickerPrices(tickers, timestamp)
 
     portfolioPrinciple = getPortfolioPrinciple(transactionsDB, timestamp)
     # only update hourly
-    if(abs(timestamp - LAST_TIMESTAMP) > 3600):
+    if timestamp - LAST_TIMESTAMP > 3600:
         updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
     portfolioTrades = getPortfolioTrades(tradesDB)
     portfolioBalance = getPortfolioBalance()
     portfolioTransactions = getPortfolioTransactions(transactionsDB)
 
     # add or subtract past transactions to get historical balance
-    portfolioHistoBalance = getPortfolioHistoBalance(portfolioBalance, portfolioTrades, portfolioTransactions, timestamp)
+    portfolioHistoBalance = getPortfolioHistoBalance(
+        portfolioBalance, portfolioTrades, portfolioTransactions, timestamp)
 
     portfolioValue = getPortfolioValue(portfolioHistoBalance, tickerPrices)
     portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
@@ -97,12 +223,18 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     # add portfolio data to output
     output = {
-        'time': timestamp,
+        'time':
+        timestamp,
         'tickers': {},
-        'nav': curNav,
-        'principle': portfolioPrinciple,
-        'value': portfolioValueAggregate,
-        'performance': int((portfolioValueAggregate - portfolioPrinciple) / portfolioPrinciple * 100) / 100
+        'nav':
+        curNav,
+        'principle':
+        portfolioPrinciple,
+        'value':
+        portfolioValueAggregate,
+        'performance':
+        int((portfolioValueAggregate - portfolioPrinciple
+             ) / portfolioPrinciple * 100) / 100
     }
 
     # add all ticker data to output
@@ -113,27 +245,27 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
             'value': portfolioValue[ticker]
         }
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return output
 
 
 def getPortfolioPrinciple(transactionsDB, timestamp=int(time())):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     principle = 0
 
     for transaction in transactionsDB.find({}):
-        if(int(transaction['timestamp']) < timestamp):
-            if(transaction['action'] == 'deposit'):
+        if int(transaction['timestamp']) < timestamp:
+            if transaction['action'] == 'deposit':
                 principle += int(transaction['amount'])
-            elif(transaction['action'] == 'withdrawal'):
+            elif transaction['action'] == 'withdrawal':
                 principle -= int(transaction['amount'])
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return principle
 
@@ -147,76 +279,76 @@ def getPortfolioTransactions(transactionsDB):
 
 
 def aggregatePortfolioValue(portfolioValue):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     output = 0
     for value in portfolioValue.values():
         output += value
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return output
 
 
 def getPortfolioValue(portfolioBalance, prices, time=int(time())):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     portfolioValue = {}
 
     for ticker, price in prices.items():
         balance = portfolioBalance[ticker]
-        if(balance > 0):
-            portfolioValue[ticker] = balance * prices[ticker]
+        if balance > 0:
+            portfolioValue[ticker] = balance * price
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return portfolioValue
 
 
 def getPortfolioBalance():
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     balance = BINANCE_CLIENT.get_account()
 
     # hide empty balances / convert to dict
     output = {}
     for balance in balance['balances']:
-        if(float(balance['free']) != 0):
+        if float(balance['free']) != 0:
             output[balance['asset']] = float(balance['free'])
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return output
 
 
 # TODO: get historic tickers
 def getTickers():
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     balance = BINANCE_CLIENT.get_account()
 
     # hide empty balances / convert to dict
     tickers = []
     for balance in balance['balances']:
-        if(float(balance['free']) != 0):
+        if float(balance['free']) != 0:
             tickers.append(balance['asset'])
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return tickers
 
 
 def getTickerPrices(tickers, timestamp=int(time())):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     prices = {}
 
@@ -225,44 +357,51 @@ def getTickerPrices(tickers, timestamp=int(time())):
         threads.append(gevent.spawn(getTickerPrice, ticker, 'USD'))
     gevent.joinall(threads)
     for g in threads:
-        if(g.value is not None):
+        if g.value is not None:
             prices[g.value[0]] = g.value[1]
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return prices
 
 
-def getTickerPricesBak(tickers, timestamp=int(time())):
-    LOGGER.info(currentFuncName() + ': start')
+def getTickerPricesHisto1Day(tickers):
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     prices = {}
-    url = 'https://min-api.cryptocompare.com/data/pricehistorical'
 
+    threads = []
     for ticker in tickers:
-        tickerFix = ticker
-        if(ticker == 'IOTA'):
-            tickerFix = 'IOT'
-        elif(ticker == 'NANO'):
-            tickerFix = 'XRB'
-        elif(ticker == 'BCC'):
-            tickerFix = 'BCH'
+        threads.append(gevent.spawn(getTickerPriceHisto1Hour, ticker, 'USD'))
+    gevent.joinall(threads)
+    for g in threads:
+        if g.value is not None:
+            prices[g.value[0]] = g.value[1]
 
-        params = {
-            'fsym': tickerFix,
-            'tsyms': 'USD',
-            'market': 'BitTrex',
-            'ts': timestamp
-        }
-        r = requests.get(url=url, params=params)
-        prices[ticker] = r.json()[tickerFix]['USD']
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
-        # ex: https://min-api.cryptocompare.com/data/pricehistorical?fsym=WTC&tsyms=USD&market=BitTrex
+    return prices
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+
+def getTickerPricesHisto3Day(tickers):
+    start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
+
+    prices = {}
+
+    threads = []
+    for ticker in tickers:
+        threads.append(gevent.spawn(getTickerPriceHisto3Hour, ticker, 'USD'))
+    gevent.joinall(threads)
+    for g in threads:
+        if g.value is not None:
+            prices[g.value[0]] = g.value[1]
+
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return prices
 
@@ -275,27 +414,33 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     price = 0
     url = 'https://min-api.cryptocompare.com/data/pricehistorical'
 
-    if(ticker1 == 'IOTA'):
+    if ticker1 == 'IOTA':
         ticker1 = 'IOT'
-    elif(ticker2 == 'IOTA'):
+    elif ticker2 == 'IOTA':
         ticker2 = 'IOT'
-    elif(ticker1 == 'NANO'):
+    elif ticker1 == 'NANO':
         ticker1 = 'XRB'
-    elif(ticker2 == 'NANO'):
+    elif ticker2 == 'NANO':
         ticker2 = 'XRB'
-    elif(ticker1 == 'BCC'):
+    elif ticker1 == 'BCC':
         ticker1 = 'BCH'
-    elif(ticker2 == 'BCC'):
+    elif ticker2 == 'BCC':
         ticker2 = 'BCH'
+
     params = {
         'fsym': ticker1,
         'tsyms': ticker2,
         'market': 'BitTrex',
         'ts': timestamp
     }
+
     r = requests.get(url=url, params=params).json()
+
     if 'Response' in r:
-        LOGGER.warn(ticker1 + ' is not registered on the cryptocompare api, ticker will be ignored')
+        LOGGER.warn(
+            ticker1 +
+            ' is not registered on the cryptocompare api, ticker will be ignored'
+        )
         return None
     else:
         price = r[ticker1][ticker2]
@@ -303,56 +448,154 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
     return [tickerOrig, price]
 
 
-def getPortfolioHistoBalance(portfolioBalance, portfolioTrades, portfolioTransactions, timestamp=int(time())):
-    LOGGER.info(currentFuncName() + ': start')
+# can fail in weird cases where tickers don't exist in price data and doesn't break anything
+@gevent_throttle(14)
+def getTickerPriceHisto1Hour(ticker1, ticker2, timestamp=int(time())):
+    tickerOrig = ticker1
+
+    url = 'https://min-api.cryptocompare.com/data/histohour'
+
+    if ticker1 == 'IOTA':
+        ticker1 = 'IOT'
+    elif ticker2 == 'IOTA':
+        ticker2 = 'IOT'
+    elif ticker1 == 'NANO':
+        ticker1 = 'XRB'
+    elif ticker2 == 'NANO':
+        ticker2 = 'XRB'
+    elif ticker1 == 'BCC':
+        ticker1 = 'BCH'
+    elif ticker2 == 'BCC':
+        ticker2 = 'BCH'
+
+    params = {
+        'fsym': ticker1,
+        'tsym': ticker2,
+        # 'e': 'BitTrex',
+        'limit': 24
+    }
+
+    r = requests.get(url=url, params=params).json()
+
+    if r['Response'] != 'Success':
+        LOGGER.warn(
+            ticker1 +
+            ' is not registered on the cryptocompare api, ticker will be ignored'
+        )
+        return None
+    else:
+        prices = []
+
+        for ts in r['Data']:
+            prices.append({
+                'timestamp': ts['time'],
+                'price': (ts['open'] + ts['close']) / 2
+            })
+
+    return [tickerOrig, prices]
+
+
+# can fail in weird cases where tickers don't exist in price data and doesn't break anything
+@gevent_throttle(14)
+def getTickerPriceHisto3Hour(ticker1, ticker2, timestamp=int(time())):
+    tickerOrig = ticker1
+
+    url = 'https://min-api.cryptocompare.com/data/histohour'
+
+    if ticker1 == 'IOTA':
+        ticker1 = 'IOT'
+    elif ticker2 == 'IOTA':
+        ticker2 = 'IOT'
+    elif ticker1 == 'NANO':
+        ticker1 = 'XRB'
+    elif ticker2 == 'NANO':
+        ticker2 = 'XRB'
+    elif ticker1 == 'BCC':
+        ticker1 = 'BCH'
+    elif ticker2 == 'BCC':
+        ticker2 = 'BCH'
+
+    params = {
+        'fsym': ticker1,
+        'tsym': ticker2,
+        'aggregate': 3,
+        # 'e': 'BitTrex',
+        'limit': 24
+    }
+
+    r = requests.get(url=url, params=params).json()
+
+    if r['Response'] != 'Success':
+        LOGGER.warn(
+            ticker1 +
+            ' is not registered on the cryptocompare api, ticker will be ignored'
+        )
+        return None
+    else:
+        prices = []
+
+        for ts in r['Data']:
+            prices.append({
+                'timestamp': ts['time'],
+                'price': (ts['open'] + ts['close']) / 2
+            })
+
+    return [tickerOrig, prices]
+
+
+def getPortfolioHistoBalance(portfolioBalance,
+                             portfolioTrades,
+                             portfolioTransactions,
+                             timestamp=int(time())):
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     # eliminate trades after timestamp
     for trade in portfolioTrades:
-        if(trade['timestamp'] > timestamp):
+        if trade['timestamp'] > timestamp:
             quantity = float(trade['executedQty'])
             ticker1 = trade['symbol'][:-3]
             ticker2 = trade['symbol'][-3:]
-            rate = getTickerPrice(ticker1, ticker2, trade['timestamp'])
-            if(trade['side'] == 'BUY'):
+            rate = getTickerPrice(ticker1, ticker2, trade['timestamp'])[1]
+            if trade['side'] == 'BUY':
                 portfolioBalance[ticker1] -= quantity
                 portfolioBalance[ticker2] += quantity * rate
-            elif(trade['side'] == 'SELL'):
+            elif trade['side'] == 'SELL':
                 portfolioBalance[ticker1] += quantity
                 portfolioBalance[ticker2] -= quantity * rate
 
     # TODO: IMPLEMENT PROPER BACK TRACKING
     # eliminate transactions after timestamp using stored transactions - proper method
-    # for transaction in portfolioTransactions:
-    #     if(transaction['timestamp'] > timestamp):
-    #         if(transaction['action'] == 'deposit'):
-    #             for ticker, val in transaction['dist'].items():
-    #                 portfolioBalance[ticker] -= val
-    #         elif(transaction['action'] == 'withdrawal'):
-    #             for ticker, val in transaction['dist'].items():
-    #                 portfolioBalance[ticker] += val
+    for transaction in portfolioTransactions:
+        if transaction['timestamp'] > timestamp:
+            if transaction['action'] == 'deposit':
+                for ticker, val in transaction['dist'].items():
+                    portfolioBalance[ticker] -= val
+            elif transaction['action'] == 'withdrawal':
+                for ticker, val in transaction['dist'].items():
+                    portfolioBalance[ticker] += val
 
     # temp back tracking
-    if(timestamp <= 1516596360):
-        portfolioBalance['BTC'] -= 0.03365017
-        portfolioBalance['ETH'] -= 1.48342885
-    if(timestamp <= 1517896740):
-        portfolioBalance['ETH'] -= 0.39596584
+    # if timestamp <= 1516596360:
+    #     portfolioBalance['BTC'] -= 0.03365017
+    #     portfolioBalance['ETH'] -= 1.48342885
+    # if timestamp <= 1517896740:
+    #     portfolioBalance['ETH'] -= 0.39596584
 
     # clean negative balances due to rounding errors
     for ticker, balance in portfolioBalance.items():
-        if(balance < 0):
+        if balance < 0:
             portfolioBalance[ticker] = 0
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return portfolioBalance
 
 
 def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     newestTimestamp = 0
     newestNav = 1
@@ -361,25 +604,25 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
 
     # check if any newer nav val in DB
     for transaction in transactionsDB.find():
-        if(transaction['timestamp'] < timestamp):
-            if(transaction['timestamp'] > newestTimestamp):
+        if transaction['timestamp'] < timestamp:
+            if transaction['timestamp'] > newestTimestamp:
                 newestTimestamp = transaction['timestamp']
                 newestNav = transaction['nav']
 
     for transaction in transactionsDB.find():
-        if(transaction['timestamp'] < timestamp):
-            if(transaction['action'] == 'deposit'):
+        if transaction['timestamp'] < timestamp:
+            if transaction['action'] == 'deposit':
                 newestPortfolioValue += transaction['amount'] * newestNav
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return newestNav * (currentPortfolioValue / newestPortfolioValue)
 
 
 def calculateNavCached(transactionsDB, currentPortfolioValue):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     timestamp = getUnixTime()
     global LAST_NAV
@@ -391,14 +634,14 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
 
     # check if any newer nav val in DB
     for transaction in transactionsDB.find():
-        if(transaction['timestamp'] < timestamp):
-            if(transaction['timestamp'] > lastTimestamp):
+        if transaction['timestamp'] < timestamp:
+            if transaction['timestamp'] > lastTimestamp:
                 lastTimestamp = transaction['timestamp']
                 lastNav = transaction['nav']
 
     for transaction in transactionsDB.find():
-        if(transaction['timestamp'] < timestamp):
-            if(transaction['action'] == 'deposit'):
+        if transaction['timestamp'] < timestamp:
+            if transaction['action'] == 'deposit':
                 lastPortfolioValue += transaction['amount'] * lastNav
 
     updatedNav = lastNav * (currentPortfolioValue / lastPortfolioValue)
@@ -406,8 +649,8 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     LAST_NAV = updatedNav
     LAST_TIMESTAMP = timestamp
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return updatedNav
 
@@ -416,7 +659,13 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
 # user menu functions #
 #######################
 
-def getUserAccount(usersDB, transactionsDB, tradesDB, histoPricesDB, userId, timestamp=int(time())):
+
+def getUserAccount(usersDB,
+                   transactionsDB,
+                   tradesDB,
+                   histoPricesDB,
+                   userId,
+                   timestamp=int(time())):
     portfolio = getPortfolio(usersDB, transactionsDB, tradesDB, timestamp)
 
     portfolioNav = portfolio['nav']
@@ -427,7 +676,8 @@ def getUserAccount(usersDB, transactionsDB, tradesDB, histoPricesDB, userId, tim
     user = users[0]
 
     userPrinciple = getUserPrinciple(user, transactionsDB, timestamp)
-    userValue = getUserValue(user, transactionsDB, userPrinciple, portfolioNav, timestamp)
+    userValue = getUserValue(user, transactionsDB, userPrinciple, portfolioNav,
+                             timestamp)
 
     output = {
         'time': timestamp,
@@ -435,7 +685,8 @@ def getUserAccount(usersDB, transactionsDB, tradesDB, histoPricesDB, userId, tim
         'lastName': user['lastName'],
         'principle': userPrinciple,
         'value': userValue,
-        'performance': int((userValue - userPrinciple) / userPrinciple * 100) / 100
+        'performance': int(
+            (userValue - userPrinciple) / userPrinciple * 100) / 100
     }
 
     return output
@@ -448,83 +699,88 @@ def getUserPrinciple(selectedUser, transactionsDB, timestamp=int(time())):
         transactions.append(transactionsDB.find_one({'_id': transactionId}))
 
     for transaction in transactions:
-        if(transaction['timestamp'] <= timestamp):
-            if(transaction['action'] == 'deposit'):
+        if transaction['timestamp'] <= timestamp:
+            if transaction['action'] == 'deposit':
                 userPrinciple += int(transaction['amount'])
-            elif(transaction['action'] == 'withdrawal'):
+            elif transaction['action'] == 'withdrawal':
                 userPrinciple -= int(transaction['amount'])
 
     return userPrinciple
 
 
-def getUserValue(selectedUser, transactionsDB, userPrinciple, curNav, timestamp=int(time())):
+def getUserValue(selectedUser,
+                 transactionsDB,
+                 userPrinciple,
+                 curNav,
+                 timestamp=int(time())):
     userValue = 0
     transactions = []
     for transactionId in selectedUser['transactions']:
         transactions.append(transactionsDB.find_one({'_id': transactionId}))
 
     for transaction in transactions:
-        if(transaction['timestamp'] <= timestamp):
-            if(transaction['action'] == 'deposit'):
-                userValue += transaction['amount'] * (curNav / transaction['nav'])
-            elif(transaction['action'] == 'withdrawal'):
-                userValue -= transaction['amount'] * (curNav / transaction['nav'])
+        if transaction['timestamp'] <= timestamp:
+            if transaction['action'] == 'deposit':
+                userValue += transaction['amount'] * (
+                    curNav / transaction['nav'])
+            elif transaction['action'] == 'withdrawal':
+                userValue -= transaction['amount'] * (
+                    curNav / transaction['nav'])
 
     return userValue
 
 
 def getTransaction(transactionsDB, transactionId):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     transactions = []
     for transaction in transactionsDB.find({'_id': ObjectId(transactionId)}):
         transaction['_id'] = str(transaction['_id'])
         transactions.append(transaction)
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return transactions
 
 
 # cleans up excess of properties unneeded for usecase
 def sanitizeTrades(binanceTrades):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     sanitizedTrades = []
 
     for binanceTrade in binanceTrades:
-        trade = {}
-        trade['executedQty'] = binanceTrade['executedQty']
-        trade['origQty'] = binanceTrade['origQty']
-        trade['side'] = binanceTrade['side']
-        trade['status'] = binanceTrade['status']
-        trade['symbol'] = binanceTrade['symbol']
-        trade['timestamp'] = int(binanceTrade['time'] / 1000)
-        trade['type'] = binanceTrade['type']
-        trade['orderId'] = binanceTrade['orderId']
+        trade = {
+            'executedQty': binanceTrade['executedQty'],
+            'origQty': binanceTrade['origQty'],
+            'side': binanceTrade['side'],
+            'status': binanceTrade['status'],
+            'symbol': binanceTrade['symbol'],
+            'timestamp': int(binanceTrade['time'] / 1000),
+            'type': binanceTrade['type'],
+            'orderId': binanceTrade['orderId']
+        }
+
         sanitizedTrades.append(trade)
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
     return sanitizedTrades
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
     start = getUnixTimeLog()
-    LOGGER.info(currentFuncName() + ': start time: ' + str(start))
+    LOGGER.info(currentFuncName() + ': start')
 
     binanceTrades = []
     threads = []
-    i = 0
     for ticker in tickers:
-        pid = i
-        threads.append(gevent.spawn(updateTradeDBHelper1, ticker, pid))
-        threads.append(gevent.spawn(updateTradeDBHelper2, ticker, pid))
-        i += 1
+        threads.append(gevent.spawn(updateTradeDBHelper1, ticker))
+        threads.append(gevent.spawn(updateTradeDBHelper2, ticker))
     gevent.joinall(threads)
     for g in threads:
         for trade in g.value:
@@ -535,69 +791,65 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
     # add if not in DB
     for binanceTrade in binanceTrades:
         dbNumTrades = tradesDB.count({'orderId': binanceTrade['orderId']})
-        if(dbNumTrades == 0):
+        if dbNumTrades == 0:
             tradesDB.insert_one(binanceTrade)
 
     # add old trades from JSON in DB
     JSONtrades = json.load(open('oldTrades.json'))
     for JSONtrade in JSONtrades['data']:
-        if(not tradesDB.count(JSONtrade)):
+        if not tradesDB.count(JSONtrade):
             tradesDB.insert_one(JSONtrade)
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
 
-def updateTradeDBHelper1(ticker, pid):
-    # start = getUnixTimeLog()
+def updateTradeDBHelper1(ticker):
     binanceTrades = []
 
-    # cycle tickers to collect binance trades
-    if(ticker != 'BTC'):
+    if ticker != 'BTC':
         tradeTickers = ticker + 'BTC'
+        LOGGER.info(tradeTickers + ': started at ' + str(getUnixTimeLog()))
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        # print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
     return binanceTrades
 
 
-def updateTradeDBHelper2(ticker, pid):
+def updateTradeDBHelper2(ticker):
     binanceTrades = []
-    # start = getUnixTimeLog()
 
-    # cycle tickers to collect binance trades
     # REVIEW: why not BTC?
-    if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
-        # if(ticker == 'NANO'):
+    if ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS':
+        # if ticker == 'NANO':
         #     ticker = 'XRB'
         tradeTickers = ticker + 'ETH'
+        LOGGER.info(tradeTickers + ': started at ' + str(getUnixTimeLog()))
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
-        # print(str(pid) + ' - ' + tradeTickers + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
 
     return binanceTrades
 
 
 def updateTradeDBBak(tradesDB, transactionsDB, tickers):
-    LOGGER.info(currentFuncName() + ': start')
     start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
 
     binanceTrades = []
 
     # cycle tickers to collect binance trades
     for ticker in tickers:
-        if(ticker != 'BTC'):
+        if ticker != 'BTC':
             ticker = ticker + 'BTC'
             trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
             for trade in trades:
                 binanceTrades.append(trade)
     for ticker in tickers:
         # REVIEW: why not BTC?
-        if(ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS'):
-            # if(ticker == 'NANO'):
+        if ticker != 'ETH' and ticker != 'BTC' and ticker != 'GAS':
+            # if ticker == 'NANO':
             #     ticker = 'XRB'
             ticker = ticker + 'ETH'
             trades = BINANCE_CLIENT.get_all_orders(symbol=ticker, limit=500)
@@ -609,17 +861,17 @@ def updateTradeDBBak(tradesDB, transactionsDB, tickers):
     # add if not in DB
     for binanceTrade in binanceTrades:
         dbNumTrades = tradesDB.count({'orderId': binanceTrade['orderId']})
-        if(dbNumTrades == 0):
+        if dbNumTrades == 0:
             tradesDB.insert_one(binanceTrade)
 
     # add old trades from JSON in DB
     JSONtrades = json.load(open('oldTrades.json'))
     for JSONtrade in JSONtrades['data']:
-        if(not tradesDB.count(JSONtrade)):
+        if not tradesDB.count(JSONtrade):
             tradesDB.insert_one(JSONtrade)
 
-    LOGGER.info(currentFuncName() + ': end')
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
 
 
 def deleteDocs(db, match={}):
@@ -637,4 +889,5 @@ def getUnixTimeLog():
 # for current func name, specify 0 or no argument.
 # for name of caller of current func, specify 1.
 # for name of caller of caller of current func, specify 2. etc.
-currentFuncName = lambda n=0: sys._getframe(n + 1).f_code.co_name
+def currentFuncName(n=0):
+    return sys._getframe(n + 1).f_code.co_name

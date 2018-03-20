@@ -9,8 +9,8 @@ from flask_cors import CORS
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 import os
-from time import time
-import logging
+# import logging
+# from time import time
 
 # configs
 APP = Flask(__name__)
@@ -29,7 +29,7 @@ CLIENT = MongoClient(MONGODB_HOST, MONGODB_PORT)
 DB = CLIENT[MONGODB_NAME]
 DB.authenticate(MONGODB_USER, MONGODB_PASS)
 
-logging.getLogger('flask_cors').level = logging.DEBUG
+# logging.getLogger('flask_cors').level = logging.DEBUG
 
 
 # @RETURNS: list of users
@@ -68,7 +68,8 @@ class UsersId(Resource):
 # @URL: http://api.coinaged.com/users/{userId}/portfolio
 class UsersPortfolio(Resource):
     def get(self, userId):
-        account = coinagedPyMongo.getUserAccount(DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
+        account = coinagedPyMongo.getUserAccount(
+            DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
         return jsonify(account)
 
 
@@ -91,7 +92,8 @@ class Transactions(Resource):
 # @URL: http://api.coinaged.com/transactions/{transactionId}
 class TransactionsId(Resource):
     def get(self, transactionId):
-        transaction = coinagedPyMongo.getTransaction(DB.transactions, transactionId)
+        transaction = coinagedPyMongo.getTransaction(DB.transactions,
+                                                     transactionId)
         return jsonify(transaction)
 
 
@@ -114,8 +116,44 @@ class Trades(Resource):
 # @URL: http://api.coinaged.com/portfolio
 class Portfolio(Resource):
     def get(self):
-        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions, DB.trades)
+        portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions,
+                                                 DB.trades)
         return jsonify(portfolio)
+
+
+# @RETURNS: overall portfolio performance
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/portfolio/1day
+class PortfolioHistorical1Day(Resource):
+    def get(self):
+        portfolio = coinagedPyMongo.getPortfolio1Day(DB.users, DB.transactions,
+                                                     DB.trades)
+        return jsonify(portfolio)
+
+
+# @RETURNS: overall portfolio performance
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/portfolio/3day
+class PortfolioHistorical3Day(Resource):
+    def get(self):
+        portfolio = coinagedPyMongo.getPortfolio3Day(DB.users, DB.transactions,
+                                                     DB.trades)
+        return jsonify(portfolio)
+
+
+# @RETURNS: test
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/portfolio
+class Test(Resource):
+    def get(self):
+        # portfolio = coinagedPyMongo.getPortfolioDay(DB.users, DB.transactions, DB.trades)
+        test = coinagedPyMongo.getTickerPrices(
+            tickers=coinagedPyMongo.getTickers())
+        return jsonify(test)
+        # return jsonify(portfolio)
 
 
 API.add_resource(Users, '/users')
@@ -125,7 +163,10 @@ API.add_resource(Transactions, '/transactions')
 API.add_resource(TransactionsId, '/transactions/<transactionId>')
 API.add_resource(Trades, '/trades')
 API.add_resource(Portfolio, '/portfolio')
+API.add_resource(PortfolioHistorical1Day, '/portfolio/historical/1day')
+API.add_resource(PortfolioHistorical3Day, '/portfolio/historical/3day')
 
+API.add_resource(Test, '/test')
 
 if __name__ == '__main__':
     APP.run()

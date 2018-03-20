@@ -1,0 +1,8 @@
+lib
+bin
+include
+pip-selfcheck.json
+*.pyc
+Procfile
+secret.json
+.vscode/settings.json
