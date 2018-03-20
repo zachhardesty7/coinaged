@@ -3,7 +3,7 @@
 # future shift to mongo engine
 import coinagedPyMongo
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from flask_cors import CORS
 from bson.objectid import ObjectId
@@ -125,46 +125,15 @@ class Portfolio(Resource):
 #
 # @METHOD: GET
 # @URL: http://api.coinaged.com/portfolio/1day
-class PortfolioHistorical1Day(Resource):
+class PortfolioHistorical(Resource):
     def get(self):
-        portfolio = coinagedPyMongo.getPortfolio1Day(DB.users, DB.transactions,
-                                                     DB.trades)
+        interval = request.args.get('interval', 'day')
+        aggregate = request.args.get('aggregate', 1)
+        limit = request.args.get('limit', 24)
+
+        portfolio = coinagedPyMongo.getPortfolioHisto(
+            DB.users, DB.transactions, DB.trades, interval, aggregate, limit)
         return jsonify(portfolio)
-
-
-# @RETURNS: overall portfolio performance
-#
-# @METHOD: GET
-# @URL: http://api.coinaged.com/portfolio/3day
-class PortfolioHistorical3Day(Resource):
-    def get(self):
-        portfolio = coinagedPyMongo.getPortfolio3Day(DB.users, DB.transactions,
-                                                     DB.trades)
-        return jsonify(portfolio)
-
-
-# @RETURNS: overall portfolio performance
-#
-# @METHOD: GET
-# @URL: http://api.coinaged.com/portfolio/3day
-class PortfolioHistorical7Day(Resource):
-    def get(self):
-        portfolio = coinagedPyMongo.getPortfolio7Day(DB.users, DB.transactions,
-                                                     DB.trades)
-        return jsonify(portfolio)
-
-
-# @RETURNS: test
-#
-# @METHOD: GET
-# @URL: http://api.coinaged.com/portfolio
-class Test(Resource):
-    def get(self):
-        # portfolio = coinagedPyMongo.getPortfolioDay(DB.users, DB.transactions, DB.trades)
-        test = coinagedPyMongo.getTickerPrices(
-            tickers=coinagedPyMongo.getTickers())
-        return jsonify(test)
-        # return jsonify(portfolio)
 
 
 API.add_resource(Users, '/users')
@@ -174,11 +143,7 @@ API.add_resource(Transactions, '/transactions')
 API.add_resource(TransactionsId, '/transactions/<transactionId>')
 API.add_resource(Trades, '/trades')
 API.add_resource(Portfolio, '/portfolio')
-API.add_resource(PortfolioHistorical1Day, '/portfolio/historical/1day')
-API.add_resource(PortfolioHistorical3Day, '/portfolio/historical/3day')
-API.add_resource(PortfolioHistorical7Day, '/portfolio/historical/7day')
-
-API.add_resource(Test, '/test')
+API.add_resource(PortfolioHistorical, '/portfolio/historical')
 
 if __name__ == '__main__':
     APP.run()

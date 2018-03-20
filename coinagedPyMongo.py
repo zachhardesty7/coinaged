@@ -74,14 +74,16 @@ def gevent_throttle(calls_per_sec=0):
 #######################
 
 
-def getPortfolio7Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
-    start = getUnixTimeLog()
+def getPortfolioHisto(usersDB, transactionsDB, tradesDB, interval, aggregate,
+                      limit):
     LOGGER.info(currentFuncName() + ': start')
+    start = getUnixTimeLog()
+    timestamp = int(time())
 
     tickers = getTickers()
 
-    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical
-    tickerPrices = getTickerPricesHisto7Day(tickers)
+    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical/
+    tickerPrices = getTickerPricesHisto(tickers, interval, aggregate, limit)
 
     # only update trades hourly
     if timestamp - LAST_TIMESTAMP > 3600:
@@ -93,19 +95,20 @@ def getPortfolio7Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     output = []
 
-    for i in range(0, 24):
+    # build all intervals
+    for i in range(0, limit):
         ts = list(tickerPrices.values())[0][i]['timestamp']
         portfolioPrinciple = getPortfolioPrinciple(transactionsDB, ts)
         portfolioHistoBalance = getPortfolioHistoBalance(
             portfolioBalance, portfolioTrades, portfolioTransactions, ts)
 
-        tickerPricesHour = {}
-        # build day
+        # build single interval
+        tickerPricesInterval = {}
         for ticker, data in tickerPrices.items():
-            tickerPricesHour[ticker] = data[i]['price']
+            tickerPricesInterval[ticker] = data[i]['price']
 
         portfolioValue = getPortfolioValue(portfolioHistoBalance,
-                                           tickerPricesHour)
+                                           tickerPricesInterval)
         portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
         curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
 
@@ -124,130 +127,7 @@ def getPortfolio7Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
         for ticker, value in portfolioValue.items():
             periodData['tickers'][ticker] = {
                 'quantity': portfolioHistoBalance[ticker],
-                'price': tickerPricesHour[ticker],
-                'value': value
-            }
-
-        output.append(periodData)
-
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
-                ' seconds')
-
-    return output
-
-
-def getPortfolio3Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.info(currentFuncName() + ': start')
-
-    tickers = getTickers()
-
-    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical
-    tickerPrices = getTickerPricesHisto3Day(tickers)
-
-    # only update trades hourly
-    if timestamp - LAST_TIMESTAMP > 3600:
-        updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
-
-    portfolioTrades = getPortfolioTrades(tradesDB)
-    portfolioTransactions = getPortfolioTransactions(transactionsDB)
-    portfolioBalance = getPortfolioBalance()
-
-    output = []
-
-    for i in range(0, 24):
-        ts = list(tickerPrices.values())[0][i]['timestamp']
-        portfolioPrinciple = getPortfolioPrinciple(transactionsDB, ts)
-        portfolioHistoBalance = getPortfolioHistoBalance(
-            portfolioBalance, portfolioTrades, portfolioTransactions, ts)
-
-        tickerPricesHour = {}
-        # build day
-        for ticker, data in tickerPrices.items():
-            tickerPricesHour[ticker] = data[i]['price']
-
-        portfolioValue = getPortfolioValue(portfolioHistoBalance,
-                                           tickerPricesHour)
-        portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
-        curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
-
-        performance = int((portfolioValueAggregate - portfolioPrinciple
-                           ) / portfolioPrinciple * 100) / 100
-
-        periodData = {
-            'timestamp': ts,
-            'principle': portfolioPrinciple,
-            'value': portfolioValueAggregate,
-            'nav': curNav,
-            'tickers': {},
-            'performance': performance
-        }
-        # add all ticker data to output
-        for ticker, value in portfolioValue.items():
-            periodData['tickers'][ticker] = {
-                'quantity': portfolioHistoBalance[ticker],
-                'price': tickerPricesHour[ticker],
-                'value': value
-            }
-
-        output.append(periodData)
-
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
-                ' seconds')
-
-    return output
-
-
-def getPortfolio1Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.info(currentFuncName() + ': start')
-
-    tickers = getTickers()
-
-    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical
-    tickerPrices = getTickerPricesHisto1Day(tickers)
-
-    # only update trades hourly
-    if timestamp - LAST_TIMESTAMP > 3600:
-        updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
-
-    portfolioTrades = getPortfolioTrades(tradesDB)
-    portfolioTransactions = getPortfolioTransactions(transactionsDB)
-    portfolioBalance = getPortfolioBalance()
-
-    output = []
-
-    for i in range(0, 24):
-        ts = list(tickerPrices.values())[0][i]['timestamp']
-        portfolioPrinciple = getPortfolioPrinciple(transactionsDB, ts)
-        portfolioHistoBalance = getPortfolioHistoBalance(
-            portfolioBalance, portfolioTrades, portfolioTransactions, ts)
-
-        tickerPricesHour = {}
-        # build day
-        for ticker, data in tickerPrices.items():
-            tickerPricesHour[ticker] = data[i]['price']
-
-        portfolioValue = getPortfolioValue(portfolioHistoBalance,
-                                           tickerPricesHour)
-        portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
-        curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
-
-        performance = int((portfolioValueAggregate - portfolioPrinciple
-                           ) / portfolioPrinciple * 100) / 100
-
-        periodData = {
-            'timestamp': ts,
-            'principle': portfolioPrinciple,
-            'value': portfolioValueAggregate,
-            'nav': curNav,
-            'tickers': {},
-            'performance': performance
-        }
-        for ticker, value in portfolioValue.items():
-            periodData['tickers'][ticker] = {
-                'quantity': portfolioHistoBalance[ticker],
-                'price': tickerPricesHour[ticker],
+                'price': tickerPricesInterval[ticker],
                 'value': value
             }
 
@@ -428,7 +308,7 @@ def getTickerPrices(tickers, timestamp=int(time())):
     return prices
 
 
-def getTickerPricesHisto1Day(tickers):
+def getTickerPricesHisto(tickers, interval, aggregate, limit):
     start = getUnixTimeLog()
     LOGGER.info(currentFuncName() + ': start')
 
@@ -436,47 +316,9 @@ def getTickerPricesHisto1Day(tickers):
 
     threads = []
     for ticker in tickers:
-        threads.append(gevent.spawn(getTickerPriceHisto1Hour, ticker, 'USD'))
-    gevent.joinall(threads)
-    for g in threads:
-        if g.value is not None:
-            prices[g.value[0]] = g.value[1]
-
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
-                ' seconds')
-
-    return prices
-
-
-def getTickerPricesHisto3Day(tickers):
-    start = getUnixTimeLog()
-    LOGGER.info(currentFuncName() + ': start')
-
-    prices = {}
-
-    threads = []
-    for ticker in tickers:
-        threads.append(gevent.spawn(getTickerPriceHisto3Hour, ticker, 'USD'))
-    gevent.joinall(threads)
-    for g in threads:
-        if g.value is not None:
-            prices[g.value[0]] = g.value[1]
-
-    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
-                ' seconds')
-
-    return prices
-
-
-def getTickerPricesHisto7Day(tickers):
-    start = getUnixTimeLog()
-    LOGGER.info(currentFuncName() + ': start')
-
-    prices = {}
-
-    threads = []
-    for ticker in tickers:
-        threads.append(gevent.spawn(getTickerPriceHisto7Hour, ticker, 'USD'))
+        threads.append(
+            gevent.spawn(getTickerPriceHisto, ticker, 'USD', interval,
+                         aggregate, limit))
     gevent.joinall(threads)
     for g in threads:
         if g.value is not None:
@@ -532,10 +374,10 @@ def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
 
 # can fail in weird cases where tickers don't exist in price data and doesn't break anything
 @gevent_throttle(14)
-def getTickerPriceHisto1Hour(ticker1, ticker2, timestamp=int(time())):
+def getTickerPriceHisto(ticker1, ticker2, interval, aggregate, limit):
     tickerOrig = ticker1
 
-    url = 'https://min-api.cryptocompare.com/data/histohour'
+    url = 'https://min-api.cryptocompare.com/data/histo' + interval
 
     if ticker1 == 'IOTA':
         ticker1 = 'IOT'
@@ -553,104 +395,8 @@ def getTickerPriceHisto1Hour(ticker1, ticker2, timestamp=int(time())):
     params = {
         'fsym': ticker1,
         'tsym': ticker2,
-        # 'e': 'BitTrex',
-        'limit': 24
-    }
-
-    r = requests.get(url=url, params=params).json()
-
-    if r['Response'] != 'Success':
-        LOGGER.warn(
-            ticker1 +
-            ' is not registered on the cryptocompare api, ticker will be ignored'
-        )
-        return None
-    else:
-        prices = []
-
-        for ts in r['Data']:
-            prices.append({
-                'timestamp': ts['time'],
-                'price': (ts['open'] + ts['close']) / 2
-            })
-
-    return [tickerOrig, prices]
-
-
-# can fail in weird cases where tickers don't exist in price data and doesn't break anything
-@gevent_throttle(14)
-def getTickerPriceHisto3Hour(ticker1, ticker2, timestamp=int(time())):
-    tickerOrig = ticker1
-
-    url = 'https://min-api.cryptocompare.com/data/histohour'
-
-    if ticker1 == 'IOTA':
-        ticker1 = 'IOT'
-    elif ticker2 == 'IOTA':
-        ticker2 = 'IOT'
-    elif ticker1 == 'NANO':
-        ticker1 = 'XRB'
-    elif ticker2 == 'NANO':
-        ticker2 = 'XRB'
-    elif ticker1 == 'BCC':
-        ticker1 = 'BCH'
-    elif ticker2 == 'BCC':
-        ticker2 = 'BCH'
-
-    params = {
-        'fsym': ticker1,
-        'tsym': ticker2,
-        'aggregate': 3,
-        # 'e': 'BitTrex',
-        'limit': 24
-    }
-
-    r = requests.get(url=url, params=params).json()
-
-    if r['Response'] != 'Success':
-        LOGGER.warn(
-            ticker1 +
-            ' is not registered on the cryptocompare api, ticker will be ignored'
-        )
-        return None
-    else:
-        prices = []
-
-        for ts in r['Data']:
-            prices.append({
-                'timestamp': ts['time'],
-                'price': (ts['open'] + ts['close']) / 2
-            })
-
-    return [tickerOrig, prices]
-
-
-# can fail in weird cases where tickers don't exist in price data and doesn't break anything
-@gevent_throttle(14)
-def getTickerPriceHisto7Hour(ticker1, ticker2, timestamp=int(time())):
-    tickerOrig = ticker1
-
-    url = 'https://min-api.cryptocompare.com/data/histohour'
-
-    if ticker1 == 'IOTA':
-        ticker1 = 'IOT'
-    elif ticker2 == 'IOTA':
-        ticker2 = 'IOT'
-    elif ticker1 == 'NANO':
-        ticker1 = 'XRB'
-    elif ticker2 == 'NANO':
-        ticker2 = 'XRB'
-    elif ticker1 == 'BCC':
-        ticker1 = 'BCH'
-    elif ticker2 == 'BCC':
-        ticker2 = 'BCH'
-
-    params = {
-        'fsym': ticker1,
-        'tsym': ticker2,
-        'aggregate': 7,
-        # 'e': 'BitTrex',
-        'limit': 24
+        'aggregate': aggregate,
+        'limit': limit
     }
 
     r = requests.get(url=url, params=params).json()
