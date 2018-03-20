@@ -143,6 +143,17 @@ class PortfolioHistorical3Day(Resource):
         return jsonify(portfolio)
 
 
+# @RETURNS: overall portfolio performance
+#
+# @METHOD: GET
+# @URL: http://api.coinaged.com/portfolio/3day
+class PortfolioHistorical7Day(Resource):
+    def get(self):
+        portfolio = coinagedPyMongo.getPortfolio7Day(DB.users, DB.transactions,
+                                                     DB.trades)
+        return jsonify(portfolio)
+
+
 # @RETURNS: test
 #
 # @METHOD: GET
@@ -165,6 +176,7 @@ API.add_resource(Trades, '/trades')
 API.add_resource(Portfolio, '/portfolio')
 API.add_resource(PortfolioHistorical1Day, '/portfolio/historical/1day')
 API.add_resource(PortfolioHistorical3Day, '/portfolio/historical/3day')
+API.add_resource(PortfolioHistorical7Day, '/portfolio/historical/7day')
 
 API.add_resource(Test, '/test')
 

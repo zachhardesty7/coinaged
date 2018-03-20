@@ -21,7 +21,7 @@ from timeit import default_timer
 gevent.monkey.patch_socket()
 
 # configs
-DEBUG = True
+DEBUG = False
 BINANCE_API_KEY = os.environ['BINANCE_API_KEY']
 BINANCE_SECRET = os.environ['BINANCE_SECRET']
 BINANCE_CLIENT = Client(BINANCE_API_KEY, BINANCE_SECRET)
@@ -72,6 +72,68 @@ def gevent_throttle(calls_per_sec=0):
 #######################
 # portfolio functions #
 #######################
+
+
+def getPortfolio7Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
+    start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
+
+    tickers = getTickers()
+
+    # REVIEW: formating is weird, http://127.0.0.1:5000/portfolio/historical
+    tickerPrices = getTickerPricesHisto7Day(tickers)
+
+    # only update trades hourly
+    if timestamp - LAST_TIMESTAMP > 3600:
+        updateTradeDB(tradesDB, transactionsDB, tickerPrices.keys())
+
+    portfolioTrades = getPortfolioTrades(tradesDB)
+    portfolioTransactions = getPortfolioTransactions(transactionsDB)
+    portfolioBalance = getPortfolioBalance()
+
+    output = []
+
+    for i in range(0, 24):
+        ts = list(tickerPrices.values())[0][i]['timestamp']
+        portfolioPrinciple = getPortfolioPrinciple(transactionsDB, ts)
+        portfolioHistoBalance = getPortfolioHistoBalance(
+            portfolioBalance, portfolioTrades, portfolioTransactions, ts)
+
+        tickerPricesHour = {}
+        # build day
+        for ticker, data in tickerPrices.items():
+            tickerPricesHour[ticker] = data[i]['price']
+
+        portfolioValue = getPortfolioValue(portfolioHistoBalance,
+                                           tickerPricesHour)
+        portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
+        curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
+
+        performance = int((portfolioValueAggregate - portfolioPrinciple
+                           ) / portfolioPrinciple * 100) / 100
+
+        periodData = {
+            'timestamp': ts,
+            'principle': portfolioPrinciple,
+            'value': portfolioValueAggregate,
+            'nav': curNav,
+            'tickers': {},
+            'performance': performance
+        }
+        # add all ticker data to output
+        for ticker, value in portfolioValue.items():
+            periodData['tickers'][ticker] = {
+                'quantity': portfolioHistoBalance[ticker],
+                'price': tickerPricesHour[ticker],
+                'value': value
+            }
+
+        output.append(periodData)
+
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
+
+    return output
 
 
 def getPortfolio3Day(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
@@ -406,6 +468,26 @@ def getTickerPricesHisto3Day(tickers):
     return prices
 
 
+def getTickerPricesHisto7Day(tickers):
+    start = getUnixTimeLog()
+    LOGGER.info(currentFuncName() + ': start')
+
+    prices = {}
+
+    threads = []
+    for ticker in tickers:
+        threads.append(gevent.spawn(getTickerPriceHisto7Hour, ticker, 'USD'))
+    gevent.joinall(threads)
+    for g in threads:
+        if g.value is not None:
+            prices[g.value[0]] = g.value[1]
+
+    LOGGER.info(currentFuncName() + ': took ' + str(getUnixTimeLog() - start) +
+                ' seconds')
+
+    return prices
+
+
 # can fail in weird cases where tickers don't exist in price data and doesn't break anything
 @gevent_throttle(14)
 def getTickerPrice(ticker1, ticker2, timestamp=int(time())):
@@ -519,6 +601,54 @@ def getTickerPriceHisto3Hour(ticker1, ticker2, timestamp=int(time())):
         'fsym': ticker1,
         'tsym': ticker2,
         'aggregate': 3,
+        # 'e': 'BitTrex',
+        'limit': 24
+    }
+
+    r = requests.get(url=url, params=params).json()
+
+    if r['Response'] != 'Success':
+        LOGGER.warn(
+            ticker1 +
+            ' is not registered on the cryptocompare api, ticker will be ignored'
+        )
+        return None
+    else:
+        prices = []
+
+        for ts in r['Data']:
+            prices.append({
+                'timestamp': ts['time'],
+                'price': (ts['open'] + ts['close']) / 2
+            })
+
+    return [tickerOrig, prices]
+
+
+# can fail in weird cases where tickers don't exist in price data and doesn't break anything
+@gevent_throttle(14)
+def getTickerPriceHisto7Hour(ticker1, ticker2, timestamp=int(time())):
+    tickerOrig = ticker1
+
+    url = 'https://min-api.cryptocompare.com/data/histohour'
+
+    if ticker1 == 'IOTA':
+        ticker1 = 'IOT'
+    elif ticker2 == 'IOTA':
+        ticker2 = 'IOT'
+    elif ticker1 == 'NANO':
+        ticker1 = 'XRB'
+    elif ticker2 == 'NANO':
+        ticker2 = 'XRB'
+    elif ticker1 == 'BCC':
+        ticker1 = 'BCH'
+    elif ticker2 == 'BCC':
+        ticker2 = 'BCH'
+
+    params = {
+        'fsym': ticker1,
+        'tsym': ticker2,
+        'aggregate': 7,
         # 'e': 'BitTrex',
         'limit': 24
     }
