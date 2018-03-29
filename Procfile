@@ -1,1 +1,1 @@
-web: gunicorn mongodbapi:APP --worker-class gevent
+web: gunicorn mongodbapi:app --worker-class gevent
