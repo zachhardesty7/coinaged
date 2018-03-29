@@ -80,8 +80,8 @@ def gevent_throttle(calls_per_sec=0):
 
 def getPortfolioHisto(usersDB, transactionsDB, tradesDB, interval, aggregate,
                       limit):
-    LOGGER.debug(currentFuncName() + ': start')
-    start = getUnixTimeLog()
+    LOGGER.debug('{}: start'.format(curFuncName()))
+    start = getTime()
     timestamp = int(time())
 
     tickers = getTickers()
@@ -106,46 +106,50 @@ def getPortfolioHisto(usersDB, transactionsDB, tradesDB, interval, aggregate,
         portfolioHistoBalance = getPortfolioHistoBalance(
             portfolioBalance, portfolioTrades, portfolioTransactions, ts)
 
-        # build single interval
-        tickerPricesInterval = {}
-        for ticker, data in tickerPrices.items():
-            tickerPricesInterval[ticker] = data[i]['price']
+        # no data or balance held in intervals that fail this check
+        if portfolioPrinciple > 0:
+            # build single interval
+            tickerPricesInterval = {}
+            for ticker, data in tickerPrices.items():
+                tickerPricesInterval[ticker] = data[i]['price']
 
-        portfolioValue = getPortfolioValue(portfolioHistoBalance,
-                                           tickerPricesInterval)
-        portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
-        curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
+            portfolioValue = getPortfolioValue(portfolioHistoBalance,
+                                               tickerPricesInterval)
+            portfolioValueAggregate = aggregatePortfolioValue(portfolioValue)
+            curNav = calculateNavCached(transactionsDB,
+                                        portfolioValueAggregate)
 
-        performance = int((portfolioValueAggregate - portfolioPrinciple
-                           ) / portfolioPrinciple * 100) / 100
+            portfolioPerformance = int(
+                (portfolioValueAggregate - portfolioPrinciple
+                 ) / portfolioPrinciple * 100) / 100
 
-        periodData = {
-            'timestamp': ts,
-            'principle': portfolioPrinciple,
-            'value': portfolioValueAggregate,
-            'nav': curNav,
-            'tickers': {},
-            'performance': performance
-        }
-        # add all ticker data to output
-        for ticker, value in portfolioValue.items():
-            periodData['tickers'][ticker] = {
-                'quantity': portfolioHistoBalance[ticker],
-                'price': tickerPricesInterval[ticker],
-                'value': value
+            periodData = {
+                'timestamp': ts,
+                'principle': portfolioPrinciple,
+                'value': portfolioValueAggregate,
+                'nav': curNav,
+                'tickers': {},
+                'performance': portfolioPerformance
             }
+            # add each ticker data to output
+            for ticker, value in portfolioValue.items():
+                periodData['tickers'][ticker] = {
+                    'quantity': portfolioHistoBalance[ticker],
+                    'price': tickerPricesInterval[ticker],
+                    'value': value
+                }
 
-        output.append(periodData)
+            output.append(periodData)
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return output
 
 
 def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     tickers = getTickers()
     tickerPrices = getTickerPrices(tickers, timestamp)
@@ -167,20 +171,16 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
 
     curNav = calculateNavCached(transactionsDB, portfolioValueAggregate)
 
+    portfolioPerformance = int((portfolioValueAggregate - portfolioPrinciple
+                                ) / portfolioPrinciple * 100) / 100
     # add portfolio data to output
     output = {
-        'time':
-        timestamp,
+        'time': timestamp,
         'tickers': {},
-        'nav':
-        curNav,
-        'principle':
-        portfolioPrinciple,
-        'value':
-        portfolioValueAggregate,
-        'performance':
-        int((portfolioValueAggregate - portfolioPrinciple
-             ) / portfolioPrinciple * 100) / 100
+        'nav': curNav,
+        'principle': portfolioPrinciple,
+        'value': portfolioValueAggregate,
+        'performance': portfolioPerformance
     }
 
     # add all ticker data to output
@@ -191,15 +191,15 @@ def getPortfolio(usersDB, transactionsDB, tradesDB, timestamp=int(time())):
             'value': portfolioValue[ticker]
         }
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return output
 
 
 def getPortfolioPrinciple(transactionsDB, timestamp=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     principle = 0
 
@@ -210,8 +210,8 @@ def getPortfolioPrinciple(transactionsDB, timestamp=int(time())):
             elif transaction['action'] == 'withdrawal':
                 principle -= int(transaction['amount'])
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return principle
 
@@ -225,39 +225,40 @@ def getPortfolioTransactions(transactionsDB):
 
 
 def aggregatePortfolioValue(portfolioValue):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     output = 0
     for value in portfolioValue.values():
         output += value
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return output
 
 
 def getPortfolioValue(portfolioBalance, prices, time=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     portfolioValue = {}
 
+    # print(prices)
     for ticker, price in prices.items():
         balance = portfolioBalance[ticker]
         if balance > 0:
             portfolioValue[ticker] = balance * price
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return portfolioValue
 
 
 def getPortfolioBalance():
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     balance = BINANCE_CLIENT.get_account()
 
@@ -267,16 +268,16 @@ def getPortfolioBalance():
         if float(balance['free']) != 0:
             output[balance['asset']] = float(balance['free'])
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return output
 
 
 # TODO: get historic tickers
 def getTickers():
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     balance = BINANCE_CLIENT.get_account()
 
@@ -286,15 +287,15 @@ def getTickers():
         if float(balance['free']) != 0:
             tickers.append(balance['asset'])
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return tickers
 
 
 def getTickerPrices(tickers, timestamp=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     prices = {}
 
@@ -306,15 +307,15 @@ def getTickerPrices(tickers, timestamp=int(time())):
         if g.value is not None:
             prices[g.value[0]] = g.value[1]
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return prices
 
 
 def getTickerPricesHisto(tickers, interval, aggregate, limit):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     prices = {}
 
@@ -328,8 +329,8 @@ def getTickerPricesHisto(tickers, interval, aggregate, limit):
         if g.value is not None:
             prices[g.value[0]] = g.value[1]
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return prices
 
@@ -427,8 +428,8 @@ def getPortfolioHistoBalance(portfolioBalance,
                              portfolioTrades,
                              portfolioTransactions,
                              timestamp=int(time())):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     # eliminate trades after timestamp
     for trade in portfolioTrades:
@@ -446,36 +447,36 @@ def getPortfolioHistoBalance(portfolioBalance,
 
     # TODO: IMPLEMENT PROPER BACK TRACKING
     # eliminate transactions after timestamp using stored transactions - proper method
-    for transaction in portfolioTransactions:
-        if transaction['timestamp'] > timestamp:
-            if transaction['action'] == 'deposit':
-                for ticker, val in transaction['dist'].items():
-                    portfolioBalance[ticker] -= val
-            elif transaction['action'] == 'withdrawal':
-                for ticker, val in transaction['dist'].items():
-                    portfolioBalance[ticker] += val
+    # for transaction in portfolioTransactions:
+    #     if transaction['timestamp'] > timestamp:
+    #         if transaction['action'] == 'deposit':
+    #             for ticker, val in transaction['dist'].items():
+    #                 portfolioBalance[ticker] -= val
+    #         elif transaction['action'] == 'withdrawal':
+    #             for ticker, val in transaction['dist'].items():
+    #                 portfolioBalance[ticker] += val
 
     # temp back tracking
-    # if timestamp <= 1516596360:
-    #     portfolioBalance['BTC'] -= 0.03365017
-    #     portfolioBalance['ETH'] -= 1.48342885
-    # if timestamp <= 1517896740:
-    #     portfolioBalance['ETH'] -= 0.39596584
+    if timestamp <= 1516596360:
+        portfolioBalance['BTC'] -= 0.03365017
+        portfolioBalance['ETH'] -= 1.48342885
+    if timestamp <= 1517896740:
+        portfolioBalance['ETH'] -= 0.39596584
 
     # clean negative balances due to rounding errors
     for ticker, balance in portfolioBalance.items():
         if balance < 0:
             portfolioBalance[ticker] = 0
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return portfolioBalance
 
 
 def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     newestTimestamp = 0
     newestNav = 1
@@ -494,17 +495,17 @@ def calculateNav(transactionsDB, currentPortfolioValue, timestamp):
             if transaction['action'] == 'deposit':
                 newestPortfolioValue += transaction['amount'] * newestNav
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return newestNav * (currentPortfolioValue / newestPortfolioValue)
 
 
 def calculateNavCached(transactionsDB, currentPortfolioValue):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
-    timestamp = getUnixTime()
+    timestamp = int(time())
     global LAST_NAV
     global LAST_TIMESTAMP
     lastNav = LAST_NAV
@@ -529,8 +530,8 @@ def calculateNavCached(transactionsDB, currentPortfolioValue):
     LAST_NAV = updatedNav
     LAST_TIMESTAMP = timestamp
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return updatedNav
 
@@ -559,14 +560,15 @@ def getUserAccount(usersDB,
     userValue = getUserValue(user, transactionsDB, userPrinciple, portfolioNav,
                              timestamp)
 
+    userPerformance = int(
+        (userValue - userPrinciple) / userPrinciple * 100) / 100
     output = {
         'time': timestamp,
         'firstName': user['firstName'],
         'lastName': user['lastName'],
         'principle': userPrinciple,
         'value': userValue,
-        'performance': int(
-            (userValue - userPrinciple) / userPrinciple * 100) / 100
+        'performance': userPerformance
     }
 
     return output
@@ -611,24 +613,24 @@ def getUserValue(selectedUser,
 
 
 def getTransaction(transactionsDB, transactionId):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     transactions = []
     for transaction in transactionsDB.find({'_id': ObjectId(transactionId)}):
         transaction['_id'] = str(transaction['_id'])
         transactions.append(transaction)
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return transactions
 
 
 # cleans up excess of properties unneeded for usecase
 def sanitizeTrades(binanceTrades):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     sanitizedTrades = []
 
@@ -646,15 +648,15 @@ def sanitizeTrades(binanceTrades):
 
         sanitizedTrades.append(trade)
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
     return sanitizedTrades
 
 
 def updateTradeDB(tradesDB, transactionsDB, tickers):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     binanceTrades = []
     threads = []
@@ -680,8 +682,8 @@ def updateTradeDB(tradesDB, transactionsDB, tickers):
         if not tradesDB.count(JSONtrade):
             tradesDB.insert_one(JSONtrade)
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
 
 def updateTradeDBHelper1(ticker):
@@ -689,7 +691,7 @@ def updateTradeDBHelper1(ticker):
 
     if ticker != 'BTC':
         tradeTickers = ticker + 'BTC'
-        LOGGER.debug(tradeTickers + ': started at ' + str(getUnixTimeLog()))
+        LOGGER.debug('{}: started at {}'.format(tradeTickers, getTime()))
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
@@ -705,7 +707,7 @@ def updateTradeDBHelper2(ticker):
         # if ticker == 'NANO':
         #     ticker = 'XRB'
         tradeTickers = ticker + 'ETH'
-        LOGGER.debug(tradeTickers + ': started at ' + str(getUnixTimeLog()))
+        LOGGER.debug('{}: started at {}'.format(tradeTickers, getTime()))
         trades = BINANCE_CLIENT.get_all_orders(symbol=tradeTickers, limit=500)
         for trade in trades:
             binanceTrades.append(trade)
@@ -714,8 +716,8 @@ def updateTradeDBHelper2(ticker):
 
 
 def updateTradeDBBak(tradesDB, transactionsDB, tickers):
-    start = getUnixTimeLog()
-    LOGGER.debug(currentFuncName() + ': start')
+    start = getTime()
+    LOGGER.debug('{}: start'.format(curFuncName()))
 
     binanceTrades = []
 
@@ -750,24 +752,20 @@ def updateTradeDBBak(tradesDB, transactionsDB, tickers):
         if not tradesDB.count(JSONtrade):
             tradesDB.insert_one(JSONtrade)
 
-    LOGGER.debug(currentFuncName() + ': took ' +
-                 str(getUnixTimeLog() - start) + ' seconds')
+    LOGGER.debug('{}: took {} seconds'.format(curFuncName(),
+                                              getTime() - start))
 
 
 def deleteDocs(db, match={}):
     db.delete_many(match)
 
 
-def getUnixTime():
-    return int(time())
-
-
-def getUnixTimeLog():
-    return time()
-
-
 # for current func name, specify 0 or no argument.
 # for name of caller of current func, specify 1.
 # for name of caller of caller of current func, specify 2. etc.
-def currentFuncName(n=0):
+def curFuncName(n=0):
     return sys._getframe(n + 1).f_code.co_name
+
+
+def getTime():
+    return time()

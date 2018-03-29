@@ -47,8 +47,10 @@ class Users(Resource):
             for i in range(0, len(user['transactions'])):
                 user['transactions'][i] = str(user['transactions'][i])
             users.append(user)
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+
+        LOGGER.info('{}: took {} seconds'.format(self.__class__.__name__,
+                                                 time() - start))
+
         return jsonify(users)
 
 
@@ -67,8 +69,10 @@ class UsersId(Resource):
                 user['transactions'][i] = str(user['transactions'][i])
             users.append(user)
 
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+        LOGGER.info('{}: took {} seconds for userId: {}'.format(
+            self.__class__.__name__,
+            time() - start, userId))
+
         return jsonify(users)
 
 
@@ -83,8 +87,10 @@ class UsersPortfolio(Resource):
         account = coinagedPyMongo.getUserAccount(
             DB.users, DB.transactions, DB.trades, DB.histoPrices, userId)
 
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+        LOGGER.info('{}: took {} seconds for userId: {}'.format(
+            self.__class__.__name__,
+            time() - start, userId))
+
         return jsonify(account)
 
 
@@ -101,8 +107,9 @@ class Transactions(Resource):
             transaction['_id'] = str(transaction['_id'])
             transactions.append(transaction)
 
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+        LOGGER.info('{}: took {} seconds'.format(self.__class__.__name__,
+                                                 time() - start))
+
         return jsonify(transactions)
 
 
@@ -118,7 +125,7 @@ class TransactionsId(Resource):
                                                      transactionId)
 
         LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+                    ' seconds for transactionId: ' + transactionId)
         return jsonify(transaction)
 
 
@@ -135,12 +142,13 @@ class Trades(Resource):
             trade['_id'] = str(trade['_id'])
             trades.append(trade)
 
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+        LOGGER.info('{}: took {} seconds'.format(self.__class__.__name__,
+                                                 time() - start))
+
         return jsonify(trades)
 
 
-# @RETURNS: overall portfolio performance
+# @RETURNS: overall portfolio information
 #
 # @METHOD: GET
 # @URL: http://api.coinaged.com/portfolio
@@ -151,13 +159,18 @@ class Portfolio(Resource):
         portfolio = coinagedPyMongo.getPortfolio(DB.users, DB.transactions,
                                                  DB.trades)
 
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+        LOGGER.info('{}: took {} seconds'.format(self.__class__.__name__,
+                                                 time() - start))
+
         return jsonify(portfolio)
 
 
-# @RETURNS: overall portfolio performance
+# @RETURNS: overall portfolio info for given historical data
 #
+# @QUERY: interval: periods of data to be finding
+#                   supports 'day', 'hour', 'minute' strings
+# @QUERY: aggregate: num inbetween intervals to combine
+# @QUERY: limit: number of optionally aggregated periods to return
 # @METHOD: GET
 # @URL: http://api.coinaged.com/portfolio/1day
 class PortfolioHistorical(Resource):
@@ -172,8 +185,11 @@ class PortfolioHistorical(Resource):
         portfolio = coinagedPyMongo.getPortfolioHisto(
             DB.users, DB.transactions, DB.trades, interval, aggregate, limit)
 
-        LOGGER.info(self.__class__.__name__ + ': took ' + str(time() - start) +
-                    ' seconds')
+        LOGGER.info(
+            '{}: took {} seconds using queries: interval={}, aggregate={}, limit={}'.
+            format(self.__class__.__name__,
+                   time() - start, interval, aggregate, limit))
+
         return jsonify(portfolio)
 
 
