@@ -28,7 +28,7 @@ gevent.monkey.patch_socket()
 
 INFO = True
 DEBUG = False
-LOCAL = True
+LOCAL = False
 
 if LOCAL:
     JSON = json.load(open('secret.json'))
