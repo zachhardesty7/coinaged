@@ -13,6 +13,7 @@ pymongo = "*"
 flask-pymongo = "*"
 flask-restful = "*"
 flask-cors = "*"
+gevent = "*"
 
 [dev-packages]
 
