@@ -6,5 +6,3 @@ Here lies the source code for the backend of coinaged.
 ## Change Log
 
 - 0.1 initial working version of api
-
-- 0.1	initial working version of api
