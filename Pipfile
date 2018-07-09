@@ -8,6 +8,11 @@ flask = "*"
 python-binance = "*"
 pylint = "*"
 "autopep8" = "*"
+gunicorn = "*"
+pymongo = "*"
+flask-pymongo = "*"
+flask-restful = "*"
+flask-cors = "*"
 
 [dev-packages]
 
